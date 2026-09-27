@@ -122,13 +122,21 @@ Our 75-run factorial search across 5 model architectures revealed critical insig
 
 ---
 
-## 5. Hardware Power & Transient Dynamics
+## 5. Model Artifact Manifest & Provenance
 
-During long-horizon 60k-token parallel prefill on the RTX 5090 (600W TDP):
-* **Baseline System Draw:** ~820W–850W continuous (RTX 5090 + Ryzen 9 7950X3D + DDR5).
-* **Transient Excursions:** Sub-millisecond tensor core prefill bursts spike power draw by +300W to +400W (reaching ~1,150W–1,250W instantaneous).
-* **PSU Requirements:** Compact 1000W PSUs with smaller bulk capacitance (e.g., Corsair RM1000e) can trip Over-Power Protection (OPP/OCP) during sudden 60k-token prefills. 
-* **Recommendation:** Deploy on **ATX 3.1 certified 1200W–1600W PSUs** (e.g., Corsair HX1500i, Seasonic Vertex 1200/1300), or apply a zero-loss software power cap (`nvidia-smi -pl 480`).
+To guarantee reproducibility, all evaluations were conducted against exact model snapshots stored in the NInfer binary serialization format:
+
+| Model Identifier | Artifact Filename | Size (GiB) | Header | Speculative Backend | Source / Quantization | SHA-256 Digest |
+|---|---|:---:|:---:|:---:|---|---|
+| **Swift15-DFlash2** | `qwen3_8_27b_swift15_nvfp4full-dflash2.ninfer` | 18.42 | v3 | DFlash-2 (7 Draft) | kaushikvira (NVFP4 text + W8G32 embeddings) | `70e25107d7597bdb0fd7f1c851b060ea94875daf01c2358fe26ac9398a91bf00` |
+| **Swift15-MTP** | `qwen3_8_27b_nvfp4swift15.ninfer` | 21.22 | v3 | MTP (3 Draft) | kaushikvira (NVFP4 text + full embeddings) | `683f5086a0e24e9b7c5caad256d373e13eff4e0491564f5b8c2acde33e52a11e` |
+| **Swift10-MTP** | `qwen3_8_27b_nvfp4swift.ninfer` | 21.22 | v3 | MTP (3 Draft) | kaushikvira (NVFP4 text + full embeddings) | `5412a0e7ad7a670bb653a8363785257fe970b6930ffe9f0213f78b696299cf7f` |
+| **Base-DFlash2** | `qwen3_8_27b_nvfp4_dflash2.ninfer` | 22.09 | v2 | DFlash-2 (7 Draft) | NInfer / Qwen Team (Base NVFP4 + DFlash-2) | `552c374c685dce302603b95fbe940fb04243c0cd44c083efc644ad3d980d462c` |
+| **Base-NVFP4** | `qwen3_8_27b_nvfp4.ninfer` | 20.02 | v2 | MTP (3 Draft) | NInfer / Qwen Team (Base NVFP4 + MTP) | `63e71156f6ffef4c04fc88e4f4a0dcd4a3a18e358d548d199842c14b392fd929` |
+
+### 5.1 Architecture & Header Compatibility
+* **v3 Artifacts (`NINFER\x00\x03`):** Utilize updated block metadata for compressed embedding tables and fine-grained draft head layouts, requiring NInfer runtime `v0.8.0+`.
+* **v2 Artifacts (`NINFER\x00\x02`):** Legacy linear tensor layouts executed via NInfer runtime `v0.7.1`.
 
 ---
 

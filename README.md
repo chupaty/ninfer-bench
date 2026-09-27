@@ -20,6 +20,20 @@ This harness executes automated response surface sweeps across model variants an
 
 ---
 
+## Evaluated Model Artifacts & Provenance
+
+All models were evaluated in native NVFP4 precision with FP8/FP4 KV caching (`k8v4`) on the RTX 5090:
+
+| Model Architecture | Artifact Filename | Size (GiB) | Header | Spec Backend | Source / Author | SHA-256 Digest |
+|---|---|:---:|:---:|:---:|---|---|
+| **Swift15-DFlash2** | `qwen3_8_27b_swift15_nvfp4full-dflash2.ninfer` | 18.42 | v3 | DFlash-2 (7 Draft) | kaushikvira / Qwen 3.8 27B Swift 1.5 Full | `70e25107d7597bdb0fd7f1c851b060ea94875daf01c2358fe26ac9398a91bf00` |
+| **Swift15-MTP** | `qwen3_8_27b_nvfp4swift15.ninfer` | 21.22 | v3 | MTP (3 Draft) | kaushikvira / Qwen 3.8 27B Swift 1.5 | `683f5086a0e24e9b7c5caad256d373e13eff4e0491564f5b8c2acde33e52a11e` |
+| **Swift10-MTP** | `qwen3_8_27b_nvfp4swift.ninfer` | 21.22 | v3 | MTP (3 Draft) | kaushikvira / Qwen 3.8 27B Swift 1.0 | `5412a0e7ad7a670bb653a8363785257fe970b6930ffe9f0213f78b696299cf7f` |
+| **Base-DFlash2** | `qwen3_8_27b_nvfp4_dflash2.ninfer` | 22.09 | v2 | DFlash-2 (7 Draft) | NInfer / Qwen 3.8 27B Base | `552c374c685dce302603b95fbe940fb04243c0cd44c083efc644ad3d980d462c` |
+| **Base-NVFP4** | `qwen3_8_27b_nvfp4.ninfer` | 20.02 | v2 | MTP (3 Draft) | NInfer / Qwen 3.8 27B Base | `63e71156f6ffef4c04fc88e4f4a0dcd4a3a18e358d548d199842c14b392fd929` |
+
+---
+
 ## Optimization Loss Function
 
 Configurations are evaluated against a scalarized multi-objective loss function that penalizes task inaccuracies, reasoning token overhead, loop occurrences, and turnaround latency:
@@ -124,8 +138,7 @@ python bench_runner.py --sweep --scenario all
 
 ## Repository Documentation
 
-* [METHODOLOGY.md](METHODOLOGY.md): Mathematical formulation, scenario definitions, speculative dynamics, and power stability.
-* [PSU_AND_POWER_STABILITY_RECOMMENDATION.md](PSU_AND_POWER_STABILITY_RECOMMENDATION.md): Hardware power transient analysis and ATX 3.1 PSU specifications.
+* [METHODOLOGY.md](METHODOLOGY.md): Mathematical formulation, scenario definitions, speculative dynamics, and model manifest.
 * [bench_reports/SCORECARD.md](bench_reports/SCORECARD.md): Complete ledger of individual benchmark runs and turn-by-turn logs.
 
 ---
