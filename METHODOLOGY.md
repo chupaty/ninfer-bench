@@ -2,7 +2,8 @@
 
 **Author:** Simon  
 **System Hardware:** NVIDIA GeForce RTX 5090 (32GB GDDR7, SM 12.0) | AMD Ryzen 9 7950X3D (16C/32T) | 64GB DDR5  
-**Inference Engine:** NInfer (C++/CUDA Runtime with Native NVFP4 Tensor Core Execution)
+**Inference Engine:** NInfer (C++/CUDA Runtime with Native NVFP4 Tensor Core Execution)  
+**Live Interactive Dashboard:** [https://chupaty.github.io/ninfer-bench/](https://chupaty.github.io/ninfer-bench/)
 
 ---
 
@@ -132,4 +133,4 @@ During long-horizon 60k-token parallel prefill on the RTX 5090 (600W TDP):
 ---
 
 ## 6. Conclusion
-By treating local agentic inference as a multivariate optimization problem, this methodology demonstrates that local 27B reasoning models can achieve faster-than-cloud speeds (350+ tok/s), zero hallucination loops, and robust long-horizon stability on consumer workstation hardware.
+By evaluating local agentic inference across multi-turn execution and objective loss surfaces, this methodology identifies bounded hyperparameter regimes ($T=0.65, \lambda_{\text{pres}}=0.05, B_{\text{think}}=1200$) that eliminate reasoning loops, prevent speculative hallucinations, and sustain 250–370+ tok/s generation throughput with DFlash-2 across multi-turn developer sessions.

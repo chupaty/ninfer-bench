@@ -1128,7 +1128,11 @@ def generate_html(scorecard_data, dflash2_data):
     with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
         f.write(html_template)
 
-    print(f"[SUCCESS] Dashboard generated at: {OUTPUT_HTML}")
+    root_index = SCRIPT_DIR / "index.html"
+    with open(root_index, "w", encoding="utf-8") as f:
+        f.write(html_template)
+
+    print(f"[SUCCESS] Dashboard generated at: {OUTPUT_HTML} and {root_index}")
 
 
 if __name__ == "__main__":
