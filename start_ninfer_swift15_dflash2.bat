@@ -62,7 +62,7 @@ if not defined MODEL_PATH (
 rem ---------------------------------------------------------------- Configuration (kaushikvira recommended settings)
 if not defined PORT set "PORT=8080"
 if not defined HOST set "HOST=0.0.0.0"
-if not defined MAX_CONTEXT set "MAX_CONTEXT=240000"
+if not defined MAX_CONTEXT set "MAX_CONTEXT=131072"
 if not defined MODEL_ID set "MODEL_ID=qwen3.8-27b-swift15-nvfp4full-dflash2"
 if not defined SPEC set "SPEC=dflash2"
 if not defined DRAFT_TOKENS set "DRAFT_TOKENS=7"
@@ -77,6 +77,7 @@ if not defined MAX_CONCURRENCY set "MAX_CONCURRENCY=2"
 if not defined MAX_PENDING set "MAX_PENDING=64"
 if not defined PENDING_TIMEOUT_MS set "PENDING_TIMEOUT_MS=600000"
 if not defined HOST_KV_MIB set "HOST_KV_MIB=8192"
+if not defined VISION set "VISION=1"
 if not defined REQUEST_LOG set "REQUEST_LOG=1"
 if not defined REQUEST_LOG_FILE set "REQUEST_LOG_FILE=%SCRIPT_DIR%requests.jsonl"
 
@@ -87,7 +88,7 @@ for /f "delims=" %%a in ('powershell.exe -NoProfile -Command "(Get-NetIPAddress 
 )
 
 set "EXTRA_FLAGS="
-if "%VISION%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --vision --image-token-budget 1280"
+if "%VISION%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --vision"
 if "%PRESERVE_THINKING%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --preserve-thinking"
 if "%REQUEST_LOG%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --request-log-jsonl ""!REQUEST_LOG_FILE!"""
 

@@ -18,7 +18,7 @@ param (
 
     [int]$Port = 8080,
     [string]$HostAddress = "0.0.0.0",
-    [int]$MaxContext = 240000,
+    [int]$MaxContext = 131072,
     [string]$ModelId = "qwen3.8-27b-swift15-nvfp4full-dflash2",
     [string]$Spec = "dflash2",
     [int]$DraftTokens = 7,
@@ -35,7 +35,8 @@ param (
     [int]$PendingTimeoutMs = 600000,
     [string]$RequestLogFile = "",
     [switch]$NoRequestLog,
-    [switch]$Vision,
+    [bool]$Vision = $true,
+    [switch]$NoVision,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
 )
@@ -199,9 +200,8 @@ if (-not $NoRequestLog) {
     $argsList += @("--request-log-jsonl", $RequestLogFile)
 }
 
-if ($Vision) {
+if ($Vision -and -not $NoVision) {
     $argsList += "--vision"
-    $argsList += @("--image-token-budget", "1280")
 }
 
 if ($ExtraArgs) {
