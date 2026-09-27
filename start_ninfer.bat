@@ -61,7 +61,8 @@ rem ---------------------------------------------------------------- Configurati
 if not defined PORT set "PORT=8080"
 if not defined HOST set "HOST=0.0.0.0"
 if not defined MAX_CONTEXT set "MAX_CONTEXT=240000"
-if not defined KV_CAPACITY set "KV_CAPACITY=240000"
+if not defined KV_CAPACITY set "KV_CAPACITY=auto"
+if not defined HOST_KV_MIB set "HOST_KV_MIB=8192"
 if not defined MODEL_ID set "MODEL_ID=qwen3.8-27b-nvfp4"
 if not defined SPEC set "SPEC=mtp"
 if not defined DRAFT_TOKENS set "DRAFT_TOKENS=3"
@@ -71,7 +72,9 @@ if not defined TEMPERATURE set "TEMPERATURE=0.6"
 if not defined MIN_P set "MIN_P=0.05"
 if not defined PRESENCE_PENALTY set "PRESENCE_PENALTY=0.1"
 if not defined THINKING_BUDGET set "THINKING_BUDGET=4096"
-if not defined VISION set "VISION=0"
+if not defined VISION set "VISION=1"
+if not defined MEDIA_LIVE_MIB set "MEDIA_LIVE_MIB=512"
+if not defined MEDIA_CACHE_MIB set "MEDIA_CACHE_MIB=256"
 if not defined REQUEST_LOG set "REQUEST_LOG=1"
 if not defined REQUEST_LOG_FILE set "REQUEST_LOG_FILE=%SCRIPT_DIR%requests.jsonl"
 
@@ -82,16 +85,17 @@ for /f "delims=" %%a in ('powershell.exe -NoProfile -Command "(Get-NetIPAddress 
 )
 
 set "EXTRA_FLAGS="
-if "%VISION%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --vision"
+if "%VISION%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --vision --media-live-mib !MEDIA_LIVE_MIB! --media-cache-mib !MEDIA_CACHE_MIB!"
 if "%PRESERVE_THINKING%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --preserve-thinking"
 if "%REQUEST_LOG%"=="1" set "EXTRA_FLAGS=!EXTRA_FLAGS! --request-log-jsonl ""!REQUEST_LOG_FILE!"""
+if not "%HOST_KV_MIB%"=="" if not "%HOST_KV_MIB%"=="0" set "EXTRA_FLAGS=!EXTRA_FLAGS! --host-kv-mib !HOST_KV_MIB!"
 
 echo ==========================================================
 echo  Starting NInfer High-Performance Server (Windows)
 echo  GPU:             NVIDIA GeForce RTX 5090 (32GB)
 echo  Model:           !MODEL_PATH!
 echo  Model ID:        !MODEL_ID!
-echo  Context:         !MAX_CONTEXT! tokens (FP8 KV Cache)
+echo  Context:         !MAX_CONTEXT! tokens (FP8 KV Cache, Host KV: !HOST_KV_MIB! MiB)
 echo  Spec:            !SPEC! (!DRAFT_TOKENS! draft tokens + LM head draft)
 echo  Sampling:        temp=!TEMPERATURE! min_p=!MIN_P! presence_penalty=!PRESENCE_PENALTY!
 echo  Thinking Budget: !THINKING_BUDGET! tokens (preserve_thinking=%PRESERVE_THINKING%)
@@ -101,7 +105,7 @@ if "%REQUEST_LOG%"=="1" (
     echo  Request Log:     disabled
 )
 if "%VISION%"=="1" (
-    echo  Vision:          enabled
+    echo  Vision:          enabled (media live: !MEDIA_LIVE_MIB!MB, cache: !MEDIA_CACHE_MIB!MB)
 ) else (
     echo  Vision:          disabled (set VISION=1 to enable)
 )

@@ -23,7 +23,10 @@
     Speculative decoding engine: "mtp" (default) or "dflash2".
 
 .PARAMETER Vision
-    Enable vision model pipeline (default: disabled).
+    Enable vision model pipeline with optimized media buffers (default: true).
+
+.PARAMETER NoVision
+    Explicitly disable vision model pipeline.
 #>
 
 [CmdletBinding()]
@@ -34,6 +37,8 @@ param (
     [int]$Port = 8080,
     [string]$HostAddress = "0.0.0.0",
     [int]$MaxContext = 240000,
+    [string]$KvCapacity = "auto",
+    [int]$HostKvMib = 8192,
     [string]$ModelId = "qwen3.8-27b-nvfp4",
     [string]$Spec = "mtp",
     [int]$DraftTokens = 3,
@@ -44,7 +49,10 @@ param (
     [switch]$PreserveThinking,
     [string]$RequestLogFile = (Join-Path $PSScriptRoot "requests.jsonl"),
     [switch]$NoRequestLog,
-    [switch]$Vision,
+    [bool]$Vision = $true,
+    [switch]$NoVision,
+    [int]$MediaLiveMib = 512,
+    [int]$MediaCacheMib = 256,
     [switch]$DFlash2,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
@@ -129,7 +137,7 @@ Write-Host " Starting NInfer High-Performance Server (Windows)" -ForegroundColor
 Write-Host " GPU:             NVIDIA GeForce RTX 5090 (32GB)" -ForegroundColor White
 Write-Host " Model:           $ModelPath" -ForegroundColor White
 Write-Host " Model ID:        $ModelId" -ForegroundColor White
-Write-Host " Context:         $MaxContext tokens (FP8 KV Cache)" -ForegroundColor White
+Write-Host " Context:         $MaxContext tokens (FP8 KV Cache, Host KV: ${HostKvMib} MiB)" -ForegroundColor White
 Write-Host " Spec:            $Spec ($DraftTokens draft tokens + LM head draft)" -ForegroundColor White
 Write-Host " Sampling:        temp=$Temperature min_p=$MinP presence_penalty=$PresencePenalty" -ForegroundColor White
 Write-Host " Thinking Budget: $ThinkingBudget tokens (preserve_thinking=$PreserveThinking)" -ForegroundColor White
@@ -138,7 +146,7 @@ if (-not $NoRequestLog) {
 } else {
     Write-Host " Request Log:     disabled" -ForegroundColor White
 }
-Write-Host " Vision:          $(if ($Vision) { 'enabled' } else { 'disabled (use -Vision to enable)' })" -ForegroundColor White
+Write-Host " Vision:          $(if ($Vision -and -not $NoVision) { 'enabled (media live: ' + $MediaLiveMib + 'MB, cache: ' + $MediaCacheMib + 'MB)' } else { 'disabled' })" -ForegroundColor White
 Write-Host " Local URL:       http://localhost:$Port" -ForegroundColor Yellow
 Write-Host " LAN URL:         http://${lanIp}:$Port" -ForegroundColor Yellow
 Write-Host " API Base:        http://${lanIp}:$Port/v1" -ForegroundColor Yellow
@@ -159,7 +167,7 @@ $argsList = @(
     "--host", $HostAddress,
     "--port", $Port,
     "--max-context", $MaxContext,
-    "--kv-capacity", $MaxContext,
+    "--kv-capacity", $KvCapacity,
     "--max-concurrency", "1",
     "--kv-dtype", "fp8",
     "--spec", $Spec,
@@ -173,6 +181,10 @@ $argsList = @(
     "--webui"
 )
 
+if ($HostKvMib -gt 0) {
+    $argsList += @("--host-kv-mib", $HostKvMib)
+}
+
 if ($PreserveThinking) {
     $argsList += "--preserve-thinking"
 }
@@ -181,8 +193,12 @@ if (-not $NoRequestLog) {
     $argsList += @("--request-log-jsonl", $RequestLogFile)
 }
 
-if ($Vision) {
-    $argsList += "--vision"
+if ($Vision -and -not $NoVision) {
+    $argsList += @(
+        "--vision",
+        "--media-live-mib", $MediaLiveMib,
+        "--media-cache-mib", $MediaCacheMib
+    )
 }
 
 if ($ExtraArgs) {
