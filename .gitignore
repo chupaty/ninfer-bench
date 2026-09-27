@@ -1,0 +1,31 @@
+# Model Weights & Large Artifacts
+models/
+*.ninfer
+*.bin
+*.safetensors
+
+# Engine Binaries & CUDA Runtimes
+ninfer-windows-*/
+*.exe
+*.dll
+
+# Telemetry & Runtime Logs
+*.log
+ninfer.log
+debug.log
+.keep_awake.pid
+requests.jsonl
+
+# Python Cache & Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS / Editor Metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
