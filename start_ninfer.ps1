@@ -17,16 +17,13 @@
     Network interface to bind (default: 0.0.0.0 for LAN access).
 
 .PARAMETER MaxContext
-    Context token limit (default: 131072 with Vision enabled, 240000 text-only).
+    Context token limit (default: 240000).
 
 .PARAMETER Spec
     Speculative decoding engine: "mtp" (default) or "dflash2".
 
 .PARAMETER Vision
-    Enable vision model pipeline (default: true).
-
-.PARAMETER NoVision
-    Explicitly disable vision model pipeline.
+    Enable vision model pipeline (default: disabled).
 #>
 
 [CmdletBinding()]
@@ -36,7 +33,7 @@ param (
 
     [int]$Port = 8080,
     [string]$HostAddress = "0.0.0.0",
-    [int]$MaxContext = 131072,
+    [int]$MaxContext = 240000,
     [string]$ModelId = "qwen3.8-27b-nvfp4",
     [string]$Spec = "mtp",
     [int]$DraftTokens = 3,
@@ -47,8 +44,7 @@ param (
     [switch]$PreserveThinking,
     [string]$RequestLogFile = (Join-Path $PSScriptRoot "requests.jsonl"),
     [switch]$NoRequestLog,
-    [bool]$Vision = $true,
-    [switch]$NoVision,
+    [switch]$Vision,
     [switch]$DFlash2,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
@@ -142,7 +138,7 @@ if (-not $NoRequestLog) {
 } else {
     Write-Host " Request Log:     disabled" -ForegroundColor White
 }
-Write-Host " Vision:          $(if ($Vision -and -not $NoVision) { 'enabled' } else { 'disabled' })" -ForegroundColor White
+Write-Host " Vision:          $(if ($Vision) { 'enabled' } else { 'disabled (use -Vision to enable)' })" -ForegroundColor White
 Write-Host " Local URL:       http://localhost:$Port" -ForegroundColor Yellow
 Write-Host " LAN URL:         http://${lanIp}:$Port" -ForegroundColor Yellow
 Write-Host " API Base:        http://${lanIp}:$Port/v1" -ForegroundColor Yellow
@@ -185,7 +181,7 @@ if (-not $NoRequestLog) {
     $argsList += @("--request-log-jsonl", $RequestLogFile)
 }
 
-if ($Vision -and -not $NoVision) {
+if ($Vision) {
     $argsList += "--vision"
 }
 
