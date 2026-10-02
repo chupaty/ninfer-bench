@@ -54,20 +54,22 @@ $$\mathcal{L}(\vec{X}) = 2 \cdot (100 - Q) + \frac{N_{\text{think}}}{50} + 10 \c
 | **Scenario 1** | `springarm_bug` | 10 | **Multi-Crate Bug Investigation:** Locate, isolate, and patch an inverted transform vector bug across multiple Rust crates. |
 | **Scenario 2** | `phantom_ik_solver` | 6 | **Adversarial False Premise Trap:** Prompt requests optimization of a non-existent IK solver. Evaluates workspace grounding vs. hallucination. |
 | **Scenario 3** | `combiner_mech` | 15 | **Long-Horizon Architecture Synthesis:** Cross-crate entity-component synthesis with context expanding past 60,000 tokens. |
+| **Scenario 4** | `context_drift_200k` | 1 | **200K Single-Pass Context Drift (M-NIAH):** 217k-token codebase with 5 precision-depth sentinels (10% to 92%) and 3-hop causal synthesis. |
+| **Scenario 5** | `multiturn_drift_200k` | 20 | **200K 20-Turn Progressive Multi-Turn Drift:** 20 progressive turns (~10k tok/turn to 202k total), testing mutating state ($v1 \to v2 \to v3$), 30 distractors, and negative rule retention. |
 
 ---
 
-## 75-Run Factorial Benchmark Results
+## Benchmark Results (75-Run Factorial + 200K Scale Sweeps)
 
-Summary across 5 model architectures and 5 sampling configurations evaluated on an RTX 5090 (32GB):
+Summary across 5 model architectures evaluated on an RTX 5090 (32GB, NInfer v0.8.0 / CUDA 13.1):
 
-| Rank | Model Architecture | Champion Profile | Scenario 1 (Bugfix) | Scenario 2 (Trap) | Scenario 3 (Long-Horizon) | Mean Opt Loss | Peak Decode | Speculative Engine |
-|:---:|---|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | **Swift15-DFlash2** | Tight Agentic Budget (`Config-1.4`) | 100/100 (9.7s) | 100/100 (3.1s) | 85/100 (21.6s) | **44.9** | 370+ tok/s | DFlash-2 (7 Draft) |
-| 2 | **Base-NVFP4** | Author Baseline (`Config-5.1`) | 100/100 (21.3s) | 100/100 (5.8s) | 70/100 (17.9s) | **53.1** | 205 tok/s | MTP (3 Draft) |
-| 3 | **Swift10-MTP** | Tuned Local Minima (`Config-2.5`) | 100/100 (23.0s) | 100/100 (5.1s) | 70/100 (16.2s) | **59.6** | 210 tok/s | MTP (3 Draft) |
-| 4 | **Base-DFlash2** | Tight Agentic Budget (`Config-4.4`) | 100/100 (17.0s) | 75/100 (6.5s) | 85/100 (22.6s) | **60.4** | 340+ tok/s | DFlash-2 (7 Draft) |
-| 5 | **Swift15-MTP** | Tight Agentic Budget (`Config-3.4`) | 90/100 (19.6s) | 75/100 (8.0s) | 70/100 (15.5s) | **74.1** | 200 tok/s | MTP (3 Draft) |
+| Rank | Model Architecture | Champion Profile | Scenario 1 (Bugfix) | Scenario 2 (Trap) | Scenario 3 (Synth) | Scenario 4 (200k M-NIAH) | Scenario 5 (200k 20-Turn) | Peak Decode | Spec Engine |
+|:---:|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | **Swift15-DFlash2** | Tight Agentic Budget (`Config-1.4`) | 100/100 (9.7s) | 100/100 (3.1s) | 85/100 (21.6s) | **100/100 (56.9s)** | **118/125 (208s, 🏆)** | **370+ tok/s** | DFlash-2 (7 Draft) |
+| 2 | **Base-DFlash2** | Tight Agentic Budget (`Config-4.4`) | 100/100 (17.0s) | 75/100 (6.5s) | 85/100 (22.6s) | **100/100 (65.2s)** | **123/125 (233s)** | **340+ tok/s** | DFlash-2 (7 Draft) |
+| 3 | **Base-NVFP4** | Tight Agentic Budget (`Config-5.4`) | 100/100 (21.3s) | 100/100 (5.8s) | 70/100 (17.9s) | **100/100 (64.7s)** | **121/125 (293s)** | **205 tok/s** | MTP (3 Draft) |
+| 4 | **Swift10-MTP** | Tight Agentic Budget (`Config-2.4`) | 100/100 (23.0s) | 100/100 (5.1s) | 70/100 (16.2s) | **100/100 (62.5s)** | **121/125 (256s)** | **210 tok/s** | MTP (3 Draft) |
+| 5 | **Swift15-MTP** | Tight Agentic Budget (`Config-3.4`) | 90/100 (19.6s) | 75/100 (8.0s) | 70/100 (15.5s) | **100/100 (62.4s)** | **119/125 (346s)** | **200 tok/s** | MTP (3 Draft) |
 
 ---
 

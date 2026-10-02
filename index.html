@@ -1,74 +1,71 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NInfer Multivariate Agentic Benchmark & DFlash-2 Telemetry Dashboard</title>
-    <!-- Fonts -->
+    <title>NInfer Multivariate Optimization & 200K Long-Context Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Plotly.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
     <style>
         :root {
-            --bg-base: #0a0d14;
-            --bg-surface: #101522;
-            --bg-card: rgba(18, 24, 38, 0.75);
-            --bg-card-hover: rgba(26, 34, 54, 0.85);
+            --bg-primary: #0a0d14;
+            --bg-secondary: #0f131d;
+            --bg-card: rgba(17, 22, 34, 0.75);
             --border-subtle: rgba(255, 255, 255, 0.08);
             --border-glow: rgba(0, 240, 255, 0.25);
-            --text-primary: #f1f5f9;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --accent-cyan: #00f0ff;
-            --accent-blue: #3b82f6;
-            --accent-purple: #a855f7;
-            --accent-amber: #f59e0b;
-            --accent-emerald: #10b981;
-            --accent-rose: #f43f5e;
-            --gradient-champion: linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%);
-            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-base);
+            background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             padding: 24px;
+            overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%);
-            background-attachment: fixed;
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 40%);
         }
 
         .dashboard-container {
-            max-width: 1600px;
+            max-width: 1720px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 24px;
         }
 
         /* Header */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px;
             background: var(--bg-card);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
+            padding: 24px 32px;
             box-shadow: var(--shadow-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .brand-title {
@@ -76,7 +73,7 @@
             font-size: 26px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            background: var(--gradient-champion);
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #00f0ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -88,25 +85,29 @@
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.4);
             color: var(--accent-emerald);
-            font-size: 12px;
-            font-weight: 600;
             padding: 4px 10px;
-            border-radius: 20px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .header-meta {
+            display: flex;
+            gap: 20px;
             font-size: 13px;
             color: var(--text-secondary);
-            text-align: right;
-            line-height: 1.5;
         }
 
-        /* KPI Grid */
+        .header-meta strong {
+            color: var(--text-primary);
+        }
+
+        /* Top KPI Grid */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
         }
 
@@ -115,78 +116,63 @@
             backdrop-filter: blur(12px);
             border: 1px solid var(--border-subtle);
             border-radius: 16px;
-            padding: 20px 24px;
+            padding: 20px;
+            box-shadow: var(--shadow-glass);
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.25s ease;
+            gap: 6px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
         .kpi-card:hover {
             transform: translateY(-2px);
             border-color: var(--border-glow);
-            box-shadow: 0 12px 24px rgba(0, 240, 255, 0.08);
-        }
-
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--gradient-champion);
-            opacity: 0.7;
         }
 
         .kpi-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: var(--text-muted);
         }
 
         .kpi-value {
             font-family: 'Outfit', sans-serif;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            color: var(--text-primary);
         }
 
         .kpi-sub {
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
-        /* Tabs */
+        /* Navigation Tabs */
         .nav-tabs {
             display: flex;
-            gap: 8px;
-            background: var(--bg-surface);
-            padding: 6px;
-            border-radius: 14px;
-            border: 1px solid var(--border-subtle);
-            width: fit-content;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+            overflow-x: auto;
         }
 
         .tab-btn {
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
             color: var(--text-secondary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
             font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 10px 18px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: inherit;
+            white-space: nowrap;
         }
 
         .tab-btn.active {
-            background: rgba(0, 240, 255, 0.12);
+            background: rgba(0, 240, 255, 0.1);
             color: var(--accent-cyan);
             border: 1px solid rgba(0, 240, 255, 0.3);
             box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1);
@@ -260,7 +246,7 @@
             height: 560px;
         }
 
-        /* Scorecard Table */
+        /* Tables */
         .table-responsive {
             overflow-x: auto;
             border-radius: 12px;
@@ -288,22 +274,20 @@
         td {
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            color: var(--text-primary);
-            font-family: 'Fira Code', monospace;
-            font-size: 12px;
+            color: var(--text-secondary);
         }
 
         tr:hover td {
             background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
         }
 
         .tag {
-            display: inline-block;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .tag-dflash {
@@ -316,19 +300,6 @@
             background: rgba(168, 85, 247, 0.15);
             color: var(--accent-purple);
             border: 1px solid rgba(168, 85, 247, 0.3);
-        }
-
-        .tag-score-100 {
-            color: var(--accent-emerald);
-            font-weight: 700;
-        }
-
-        .tag-score-med {
-            color: var(--accent-amber);
-        }
-
-        .tag-score-low {
-            color: var(--accent-rose);
         }
 
         .champion-badge {
@@ -352,54 +323,94 @@
     <header>
         <div>
             <div class="brand-title">
-                <span>NInfer Multivariate Optimization Studio</span>
+                <span>NInfer Multivariate Optimization & 200K Scale Studio</span>
                 <span class="badge-live">RTX 5090 • NVFP4</span>
             </div>
             <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                Empirical 45-run multi-scenario sweep & DFlash-2 speculative telemetry analysis
+                Empirical multi-scenario suite, 200k context drift & DFlash-2 speculative telemetry
             </div>
         </div>
         <div class="header-meta">
             <div><strong>Engine:</strong> NInfer (CUDA 13.1 / SM 12.0)</div>
             <div><strong>Model:</strong> Qwen 3.8 27B NVFP4 (Swift 1.5)</div>
-            <div><strong>Champion:</strong> Config-1.4 (Tight Agentic Budget)</div>
+            <div><strong>Champion:</strong> Swift 1.5 DFlash-2 (18.0 GiB)</div>
         </div>
     </header>
 
     <!-- Top KPI Cards -->
     <div class="kpi-grid">
         <div class="kpi-card">
-            <div class="kpi-label">DFlash-2 Peak Decode</div>
-            <div class="kpi-value" style="color: var(--accent-cyan);" id="kpi-peak-speed">350+ tok/s</div>
-            <div class="kpi-sub">7 draft tokens + LM head draft</div>
+            <div class="kpi-label">200K Generation Speed</div>
+            <div class="kpi-value" style="color: var(--accent-cyan);">272.8 tok/s</div>
+            <div class="kpi-sub">Swift 1.5 DFlash-2 (7 draft tokens)</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Speculative Acceptance</div>
-            <div class="kpi-value" style="color: var(--accent-emerald);" id="kpi-acceptance">62.6%</div>
-            <div class="kpi-sub">Across 3,549 real-world DFlash-2 requests</div>
+            <div class="kpi-label">200K M-NIAH Accuracy</div>
+            <div class="kpi-value" style="color: var(--accent-emerald);">100% (5/5)</div>
+            <div class="kpi-sub">Zero retrieval drift (10% to 92% depth)</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Prefix Cache Hit Rate</div>
-            <div class="kpi-value" style="color: var(--accent-purple);">96.4%</div>
-            <div class="kpi-sub">Avg TTFT 0.15s – 0.35s under 60k context</div>
+            <div class="kpi-label">20-Turn Multi-Turn Scale</div>
+            <div class="kpi-value" style="color: var(--accent-purple);">208.3s Session</div>
+            <div class="kpi-sub">94.9% Prefix Cache reuse to 202k tokens</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Optimal Agentic Profile</div>
+            <div class="kpi-label">Optimal Daily Driver</div>
             <div class="kpi-value" style="font-size: 22px; color: var(--text-primary);">T=0.65, B=1200</div>
-            <div class="kpi-sub">98% tail-latency reduction (Config-1.4)</div>
+            <div class="kpi-sub">Swift15-DFlash2 (W8G32, 18.0 GiB)</div>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-multivariate')">1. Multivariate Optimization Surface</button>
-        <button class="tab-btn" onclick="switchTab('tab-dflash2')">2. DFlash-2 In-Depth Telemetry</button>
-        <button class="tab-btn" onclick="switchTab('tab-pareto')">3. Pareto Frontier & Trade-offs</button>
-        <button class="tab-btn" onclick="switchTab('tab-scorecard')">4. Grand 45-Run Scorecard Table</button>
+        <button class="tab-btn active" onclick="switchTab('tab-context-drift')">1. 200K Context Drift & Multi-Turn Deep Dive</button>
+        <button class="tab-btn" onclick="switchTab('tab-multivariate')">2. Multivariate Optimization Surface</button>
+        <button class="tab-btn" onclick="switchTab('tab-dflash2')">3. DFlash-2 In-Depth Telemetry</button>
+        <button class="tab-btn" onclick="switchTab('tab-pareto')">4. Pareto Frontier & Trade-offs</button>
+        <button class="tab-btn" onclick="switchTab('tab-scorecard')">5. Full Benchmark Scorecard Table</button>
     </div>
 
-    <!-- TAB 1: Multivariate Optimization Surface -->
-    <div id="tab-multivariate" class="tab-content active">
+    <!-- TAB 1: 200K Context Drift & Multi-Turn Scale -->
+    <div id="tab-context-drift" class="tab-content active">
+        <div class="chart-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">200,000-Token Single-Pass M-NIAH: Model Throughput & Latency</div>
+                    <div class="card-desc">Comparison of prefill TTFT and decode throughput under 217k token KV cache pressure.</div>
+                </div>
+                <div id="plot-200k-throughput" class="plot-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">20-Turn Multi-Turn Session: TTFT & Context Scaling Curve</div>
+                    <div class="card-desc">Shows how prefix caching maintains TTFT between 0.9s and 6.5s as context builds to 202,913 tokens.</div>
+                </div>
+                <div id="plot-20turn-scaling" class="plot-container"></div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">20-Turn Instruction Decay & Negative Constraint Violations</div>
+                    <div class="card-desc">Visualizes when negative rule leaks (e.g. .unwrap() in code) emerge as turn horizon expands.</div>
+                </div>
+                <div id="plot-instruction-decay" class="plot-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Total 20-Turn Session Turnaround Time (seconds)</div>
+                    <div class="card-desc">Cumulative elapsed time for complete 20-turn software engineering session across all models.</div>
+                </div>
+                <div id="plot-session-time" class="plot-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Multivariate Optimization Surface -->
+    <div id="tab-multivariate" class="tab-content">
         <div class="chart-grid full">
             <div class="card">
                 <div class="card-header">
@@ -432,7 +443,7 @@
         </div>
     </div>
 
-    <!-- TAB 2: DFlash-2 Deep Dive -->
+    <!-- TAB 3: DFlash-2 Deep Dive -->
     <div id="tab-dflash2" class="tab-content">
         <div class="chart-grid">
             <div class="card">
@@ -446,7 +457,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">DFlash-2 Acceptance Rate vs. Context Length</div>
-                    <div class="card-desc">Shows speculative efficiency scaling from small prompts up to 64,000 token context.</div>
+                    <div class="card-desc">Shows speculative efficiency scaling from small prompts up to 240,000 token context.</div>
                 </div>
                 <div id="plot-dflash-context" class="plot-container"></div>
             </div>
@@ -471,7 +482,7 @@
         </div>
     </div>
 
-    <!-- TAB 3: Pareto Frontier -->
+    <!-- TAB 4: Pareto Frontier -->
     <div id="tab-pareto" class="tab-content">
         <div class="chart-grid full">
             <div class="card">
@@ -484,12 +495,12 @@
         </div>
     </div>
 
-    <!-- TAB 4: Scorecard Table -->
+    <!-- TAB 5: Scorecard Table -->
     <div id="tab-scorecard" class="tab-content">
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Cumulative 45-Run Agentic Benchmark Scorecard</div>
-                <div class="card-desc">Filterable and searchable results table across all configurations and scenarios.</div>
+                <div class="card-title">Cumulative Benchmark Scorecard (All 55 Runs)</div>
+                <div class="card-desc">Filterable and searchable results table across all configurations, 200k drift tests, and agentic scenarios.</div>
             </div>
             <div class="table-responsive">
                 <table id="scorecard-table">
@@ -515,8 +526,8 @@
 </div>
 
 <script>
-    const scorecardData = [{"datetime": "2026-09-27 08:22", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1_Swift15-DFlash2", "profile": "Config-1_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 14.8, "turns": 6, "wallclock": 5.3, "ttft": 0.36, "thinking": 477, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 08:24", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1_Swift15-DFlash2", "profile": "Config-1_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 46.8, "turns": 10, "wallclock": 12.9, "ttft": 0.38, "thinking": 1694, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:25", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2_Swift15-DFlash2", "profile": "Config-2_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 44.4, "turns": 10, "wallclock": 12.5, "ttft": 0.6, "thinking": 1093, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:25", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3_Swift15-DFlash2", "profile": "Config-3_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 22.8, "turns": 10, "wallclock": 10.0, "ttft": 0.53, "thinking": 642, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:26", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4_Swift15-DFlash2", "profile": "Config-4_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 109.9, "turns": 10, "wallclock": 16.1, "ttft": 0.61, "thinking": 2190, "cap_hits": "1/10", "loops": 5}, {"datetime": "2026-09-27 08:28", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3_Swift15-DFlash2", "profile": "Config-3_Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 61.2, "turns": 10, "wallclock": 15.1, "ttft": 0.58, "thinking": 1805, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:38", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 65.7, "turns": 10, "wallclock": 13.1, "ttft": 0.49, "thinking": 1628, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:38", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 36.7, "turns": 10, "wallclock": 12.6, "ttft": 0.57, "thinking": 1201, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:39", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 47.4, "turns": 10, "wallclock": 12.8, "ttft": 0.57, "thinking": 1231, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:39", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 42.6, "turns": 10, "wallclock": 9.7, "ttft": 0.32, "thinking": 1146, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:40", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 46.4, "turns": 10, "wallclock": 12.8, "ttft": 0.56, "thinking": 1182, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:44", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 74.9, "turns": 10, "wallclock": 19.5, "ttft": 0.48, "thinking": 1774, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:44", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 42.8, "turns": 10, "wallclock": 17.4, "ttft": 0.62, "thinking": 1268, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:45", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 40.0, "turns": 10, "wallclock": 15.6, "ttft": 0.54, "thinking": 1223, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:46", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 219.8, "turns": 10, "wallclock": 33.5, "ttft": 0.75, "thinking": 3816, "cap_hits": "2/10", "loops": 11}, {"datetime": "2026-09-27 08:47", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 87.2, "turns": 10, "wallclock": 23.0, "ttft": 0.72, "thinking": 2212, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:48", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 62.1, "turns": 10, "wallclock": 19.7, "ttft": 0.66, "thinking": 1621, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 128.8, "turns": 10, "wallclock": 20.7, "ttft": 0.67, "thinking": 1905, "cap_hits": "0/10", "loops": 7}, {"datetime": "2026-09-27 08:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 131.9, "turns": 10, "wallclock": 16.4, "ttft": 0.3, "thinking": 1775, "cap_hits": "0/10", "loops": 8}, {"datetime": "2026-09-27 08:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 90.0, "loss": 73.4, "turns": 10, "wallclock": 19.6, "ttft": 0.68, "thinking": 1690, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 219.0, "turns": 10, "wallclock": 27.6, "ttft": 0.71, "thinking": 3067, "cap_hits": "1/10", "loops": 13}, {"datetime": "2026-09-27 09:08", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 75.0, "loss": 61.5, "turns": 6, "wallclock": 3.7, "ttft": 0.14, "thinking": 389, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 57.5, "turns": 6, "wallclock": 3.2, "ttft": 0.14, "thinking": 215, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 11.3, "turns": 6, "wallclock": 4.0, "ttft": 0.15, "thinking": 364, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 9.3, "turns": 6, "wallclock": 3.1, "ttft": 0.15, "thinking": 307, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 12.5, "turns": 6, "wallclock": 4.4, "ttft": 0.16, "thinking": 405, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 11.8, "turns": 6, "wallclock": 6.0, "ttft": 0.18, "thinking": 289, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 62.4, "turns": 6, "wallclock": 6.4, "ttft": 0.29, "thinking": 303, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 50.0, "loss": 107.3, "turns": 6, "wallclock": 3.9, "ttft": 0.16, "thinking": 172, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 65.0, "loss": 82.2, "turns": 6, "wallclock": 5.9, "ttft": 0.18, "thinking": 316, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 11.3, "turns": 6, "wallclock": 5.1, "ttft": 0.18, "thinking": 311, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 75.0, "loss": 63.2, "turns": 6, "wallclock": 6.9, "ttft": 0.31, "thinking": 317, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 90.0, "loss": 30.7, "turns": 6, "wallclock": 5.0, "ttft": 0.18, "thinking": 281, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 13.4, "turns": 6, "wallclock": 5.8, "ttft": 0.17, "thinking": 382, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 68.3, "turns": 6, "wallclock": 8.0, "ttft": 0.3, "thinking": 519, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 9.5, "turns": 6, "wallclock": 5.4, "ttft": 0.28, "thinking": 205, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 96.4, "turns": 15, "wallclock": 18.1, "ttft": 0.7, "thinking": 915, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 110.2, "turns": 15, "wallclock": 13.7, "ttft": 0.58, "thinking": 323, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 77.8, "turns": 15, "wallclock": 12.2, "ttft": 0.5, "thinking": 276, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:16", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 85.0, "loss": 82.8, "turns": 15, "wallclock": 21.6, "ttft": 0.68, "thinking": 1558, "cap_hits": "1/15", "loops": 0}, {"datetime": "2026-09-27 10:06", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 55.0, "loss": 113.9, "turns": 15, "wallclock": 16.4, "ttft": 0.73, "thinking": 376, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 55.0, "loss": 120.9, "turns": 15, "wallclock": 21.3, "ttft": 0.8, "thinking": 478, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 109.9, "turns": 15, "wallclock": 15.6, "ttft": 0.63, "thinking": 216, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:08", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 98.5, "turns": 15, "wallclock": 24.4, "ttft": 0.91, "thinking": 708, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:09", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 55.0, "loss": 121.4, "turns": 15, "wallclock": 20.0, "ttft": 0.71, "thinking": 572, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:10", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 80.2, "turns": 15, "wallclock": 16.2, "ttft": 0.63, "thinking": 198, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 85.0, "loss": 122.6, "turns": 15, "wallclock": 36.8, "ttft": 0.84, "thinking": 2788, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 115.9, "turns": 15, "wallclock": 18.5, "ttft": 0.68, "thinking": 368, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:12", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 55.0, "loss": 119.2, "turns": 15, "wallclock": 20.4, "ttft": 0.81, "thinking": 441, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 70.0, "loss": 80.5, "turns": 15, "wallclock": 15.5, "ttft": 0.61, "thinking": 250, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 93.1, "turns": 15, "wallclock": 23.4, "ttft": 0.9, "thinking": 484, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:48", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.6_Swift15-DFlash2_Draft-3_Window", "profile": "Draft-3 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 36.8, "turns": 10, "wallclock": 14.1, "ttft": 0.61, "thinking": 1132, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Draft-5 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 19.7, "turns": 10, "wallclock": 8.4, "ttft": 0.4, "thinking": 565, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.8_Swift15-DFlash2_Draft-9_Window", "profile": "Draft-9 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 294.8, "turns": 10, "wallclock": 24.6, "ttft": 0.61, "thinking": 4011, "cap_hits": "2/10", "loops": 19}, {"datetime": "2026-09-27 10:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.9_Swift15-DFlash2_Prefill_Chunk_2048", "profile": "Prefill Chunk 2048", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 40.8, "turns": 10, "wallclock": 13.9, "ttft": 0.58, "thinking": 1347, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 40.5, "turns": 10, "wallclock": 11.5, "ttft": 0.56, "thinking": 951, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Draft-5 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 45.2, "turns": 10, "wallclock": 12.7, "ttft": 0.56, "thinking": 1124, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Draft-5 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 60.0, "loss": 88.3, "turns": 6, "wallclock": 3.0, "ttft": 0.13, "thinking": 263, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Draft-5 Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 70.0, "loss": 83.2, "turns": 15, "wallclock": 15.4, "ttft": 0.64, "thinking": 389, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:05", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 73.1, "turns": 10, "wallclock": 16.1, "ttft": 0.47, "thinking": 1850, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 11:06", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 25.0, "turns": 6, "wallclock": 8.5, "ttft": 0.24, "thinking": 825, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:06", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 109.0, "turns": 15, "wallclock": 25.0, "ttft": 0.87, "thinking": 1199, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 87.7, "turns": 10, "wallclock": 10.5, "ttft": 0.33, "thinking": 861, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 69.1, "turns": 6, "wallclock": 7.8, "ttft": 0.3, "thinking": 569, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 112.2, "turns": 15, "wallclock": 16.6, "ttft": 0.73, "thinking": 278, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:08", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 46.2, "turns": 10, "wallclock": 15.4, "ttft": 0.79, "thinking": 1041, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:08", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 90.0, "loss": 31.4, "turns": 6, "wallclock": 5.1, "ttft": 0.23, "thinking": 318, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:09", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 103.4, "turns": 15, "wallclock": 24.4, "ttft": 0.91, "thinking": 950, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 46.0, "turns": 10, "wallclock": 17.0, "ttft": 0.74, "thinking": 1448, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 67.5, "turns": 6, "wallclock": 6.5, "ttft": 0.2, "thinking": 552, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 85.0, "loss": 67.6, "turns": 15, "wallclock": 22.6, "ttft": 0.84, "thinking": 750, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 46.0, "turns": 10, "wallclock": 12.0, "ttft": 0.67, "thinking": 699, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 75.0, "loss": 62.4, "turns": 6, "wallclock": 5.6, "ttft": 0.29, "thinking": 337, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 55.0, "loss": 134.2, "turns": 15, "wallclock": 24.8, "ttft": 0.97, "thinking": 969, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:12", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 63.8, "turns": 10, "wallclock": 21.3, "ttft": 0.76, "thinking": 1625, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 10.8, "turns": 6, "wallclock": 5.8, "ttft": 0.18, "thinking": 251, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 84.6, "turns": 15, "wallclock": 17.9, "ttft": 0.61, "thinking": 334, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 195.9, "turns": 10, "wallclock": 39.4, "ttft": 0.81, "thinking": 4326, "cap_hits": "1/10", "loops": 7}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 65.0, "loss": 84.6, "turns": 6, "wallclock": 7.0, "ttft": 0.3, "thinking": 383, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 70.0, "loss": 98.3, "turns": 15, "wallclock": 25.5, "ttft": 0.94, "thinking": 640, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 78.6, "turns": 10, "wallclock": 18.8, "ttft": 0.7, "thinking": 1490, "cap_hits": "0/10", "loops": 3}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 90.0, "loss": 33.3, "turns": 6, "wallclock": 6.5, "ttft": 0.22, "thinking": 337, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 101.9, "turns": 15, "wallclock": 26.4, "ttft": 0.92, "thinking": 773, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:16", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 128.6, "turns": 10, "wallclock": 21.5, "ttft": 0.71, "thinking": 1859, "cap_hits": "1/10", "loops": 7}, {"datetime": "2026-09-27 11:16", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 63.3, "turns": 6, "wallclock": 6.2, "ttft": 0.18, "thinking": 357, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 55.0, "loss": 122.1, "turns": 15, "wallclock": 23.5, "ttft": 0.85, "thinking": 430, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 75.0, "loss": 80.8, "turns": 10, "wallclock": 12.2, "ttft": 0.62, "thinking": 429, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 13.5, "turns": 6, "wallclock": 6.9, "ttft": 0.31, "thinking": 332, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:18", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 99.7, "turns": 15, "wallclock": 26.2, "ttft": 0.92, "thinking": 675, "cap_hits": "0/15", "loops": 0}];
-    const dflash2Data = {"total_requests": 3915, "position_rates": [{"position": "Draft 1", "rate": 86.2, "accepted": 376843, "drafted": 437141}, {"position": "Draft 2", "rate": 70.7, "accepted": 309156, "drafted": 437141}, {"position": "Draft 3", "rate": 57.0, "accepted": 249168, "drafted": 437141}, {"position": "Draft 4", "rate": 45.9, "accepted": 200255, "drafted": 436602}, {"position": "Draft 5", "rate": 37.2, "accepted": 162454, "drafted": 436602}, {"position": "Draft 6", "rate": 30.7, "accepted": 133809, "drafted": 435302}, {"position": "Draft 7", "rate": 25.8, "accepted": 112351, "drafted": 435302}], "bucket_summary": [{"bucket": "0 - 4k", "rate": 46.0, "reqs": 231, "avg_ttft": 0.153, "avg_speed": 303.9}, {"bucket": "4k - 16k", "rate": 41.3, "reqs": 80, "avg_ttft": 0.912, "avg_speed": 257.8}, {"bucket": "16k - 32k", "rate": 41.9, "reqs": 79, "avg_ttft": 0.865, "avg_speed": 249.9}, {"bucket": "32k - 64k", "rate": 51.1, "reqs": 3525, "avg_ttft": 2.556, "avg_speed": 295.2}], "ttft_points": [{"prompt": 402, "ttft": 0.1301184}, {"prompt": 1879, "ttft": 0.57432}, {"prompt": 81441, "ttft": 15.951500600000001}, {"prompt": 1879, "ttft": 0.2183035}, {"prompt": 81441, "ttft": 11.2730571}, {"prompt": 1879, "ttft": 0.3506208}, {"prompt": 81441, "ttft": 11.387755}, {"prompt": 19222, "ttft": 1.6821589}, {"prompt": 125, "ttft": 0.2075777}, {"prompt": 19293, "ttft": 0.2879932}, {"prompt": 358, "ttft": 0.101834}, {"prompt": 27746, "ttft": 0.9453802}, {"prompt": 196, "ttft": 0.3735514}, {"prompt": 57, "ttft": 0.4176111}, {"prompt": 28955, "ttft": 0.4409389}, {"prompt": 34571, "ttft": 0.5918057}, {"prompt": 44215, "ttft": 1.3193924}, {"prompt": 61498, "ttft": 2.6961456}, {"prompt": 75821, "ttft": 2.7745236}, {"prompt": 90791, "ttft": 3.1877766}, {"prompt": 105402, "ttft": 3.5988925999999997}, {"prompt": 120563, "ttft": 3.4341997}, {"prompt": 124561, "ttft": 0.3622906}, {"prompt": 125459, "ttft": 0.3670087}, {"prompt": 126308, "ttft": 0.37415880000000007}, {"prompt": 128104, "ttft": 0.5359007}, {"prompt": 130394, "ttft": 0.780848}, {"prompt": 132649, "ttft": 0.39639159999999996}, {"prompt": 134657, "ttft": 0.4545309}, {"prompt": 137464, "ttft": 0.6810729000000001}, {"prompt": 138290, "ttft": 0.3249679}, {"prompt": 141112, "ttft": 0.98206}, {"prompt": 143673, "ttft": 0.4767192}, {"prompt": 146993, "ttft": 0.4591036}, {"prompt": 151759, "ttft": 0.5941422}, {"prompt": 155225, "ttft": 0.28689649999999994}, {"prompt": 155980, "ttft": 0.31571309999999997}, {"prompt": 156577, "ttft": 0.37765329999999997}, {"prompt": 159513, "ttft": 0.9560037}, {"prompt": 170034, "ttft": 3.9670503999999998}, {"prompt": 170467, "ttft": 0.3177155}, {"prompt": 171218, "ttft": 0.4813776}, {"prompt": 171648, "ttft": 0.3269242}, {"prompt": 172128, "ttft": 0.3213823}, {"prompt": 172918, "ttft": 0.48593280000000005}, {"prompt": 173768, "ttft": 0.3435808}, {"prompt": 175779, "ttft": 0.4481075}, {"prompt": 178990, "ttft": 0.8535838}, {"prompt": 174882, "ttft": 45.0054722}, {"prompt": 179596, "ttft": 25.0416298}, {"prompt": 181923, "ttft": 1.4066722}, {"prompt": 183771, "ttft": 49.8794439}, {"prompt": 677, "ttft": 0.1152845}, {"prompt": 189709, "ttft": 1.7995718}, {"prompt": 194706, "ttft": 0.9382263000000001}, {"prompt": 196390, "ttft": 0.5793955}, {"prompt": 196974, "ttft": 55.6298327}, {"prompt": 203743, "ttft": 58.873908899999996}, {"prompt": 204149, "ttft": 59.354111}, {"prompt": 49318, "ttft": 6.0959089}, {"prompt": 51367, "ttft": 0.1544567}, {"prompt": 54253, "ttft": 0.569283}, {"prompt": 59523, "ttft": 0.2751121}, {"prompt": 62463, "ttft": 0.2816062}, {"prompt": 64116, "ttft": 0.2281616}, {"prompt": 66604, "ttft": 0.39390729999999996}, {"prompt": 69664, "ttft": 0.7393634}, {"prompt": 73707, "ttft": 0.3283872}, {"prompt": 74973, "ttft": 0.5410075}, {"prompt": 77454, "ttft": 0.6956469}, {"prompt": 81980, "ttft": 0.23784419999999998}, {"prompt": 82834, "ttft": 0.3532851}, {"prompt": 83159, "ttft": 0.2708695}, {"prompt": 84432, "ttft": 0.5146648}, {"prompt": 85685, "ttft": 0.3683901}, {"prompt": 88117, "ttft": 0.2475069}, {"prompt": 89715, "ttft": 0.4639832}, {"prompt": 91133, "ttft": 0.23552460000000003}, {"prompt": 91432, "ttft": 0.2478985}, {"prompt": 91708, "ttft": 0.2511639}, {"prompt": 91890, "ttft": 0.2393693}, {"prompt": 92642, "ttft": 0.45080380000000003}, {"prompt": 93375, "ttft": 0.36356579999999994}, {"prompt": 93738, "ttft": 0.26354089999999997}, {"prompt": 93958, "ttft": 0.46163760000000004}, {"prompt": 95607, "ttft": 0.7005252}, {"prompt": 96889, "ttft": 0.3642122}, {"prompt": 98245, "ttft": 0.3832017}, {"prompt": 99411, "ttft": 0.4938241}, {"prompt": 100115, "ttft": 0.3966193}, {"prompt": 101119, "ttft": 0.5572703}, {"prompt": 102148, "ttft": 0.4150321}, {"prompt": 102831, "ttft": 0.3977655}, {"prompt": 104018, "ttft": 0.27475219999999995}, {"prompt": 105340, "ttft": 0.4992535}, {"prompt": 106902, "ttft": 0.49102690000000004}, {"prompt": 107239, "ttft": 0.2739455}, {"prompt": 108203, "ttft": 0.3806832}, {"prompt": 110829, "ttft": 0.7506598999999999}, {"prompt": 111218, "ttft": 0.2805045}, {"prompt": 114572, "ttft": 0.7669057}, {"prompt": 117404, "ttft": 0.2720654}, {"prompt": 118039, "ttft": 0.2811925}, {"prompt": 118547, "ttft": 0.2712313}, {"prompt": 119011, "ttft": 0.2876113}, {"prompt": 119786, "ttft": 0.3138118}, {"prompt": 120645, "ttft": 0.30633330000000003}, {"prompt": 121307, "ttft": 0.47051889999999996}, {"prompt": 122750, "ttft": 0.42230879999999993}, {"prompt": 123353, "ttft": 0.4169777}, {"prompt": 123931, "ttft": 0.4128495}, {"prompt": 124489, "ttft": 0.3464725}, {"prompt": 125035, "ttft": 0.33655880000000005}, {"prompt": 125837, "ttft": 0.2981176}, {"prompt": 128652, "ttft": 0.6784873}, {"prompt": 130353, "ttft": 0.46592310000000003}, {"prompt": 132335, "ttft": 0.8341544999999999}, {"prompt": 134077, "ttft": 0.6030314}, {"prompt": 138319, "ttft": 0.8989107}, {"prompt": 141385, "ttft": 1.0774861}, {"prompt": 145733, "ttft": 1.0756203}, {"prompt": 151792, "ttft": 0.6271024000000001}, {"prompt": 152767, "ttft": 0.37205869999999996}, {"prompt": 153113, "ttft": 0.3572577}, {"prompt": 153997, "ttft": 0.3595992}, {"prompt": 154381, "ttft": 0.5794847}, {"prompt": 156174, "ttft": 0.3666825}, {"prompt": 156808, "ttft": 0.5077528}, {"prompt": 157314, "ttft": 0.4815661}, {"prompt": 157660, "ttft": 0.36851919999999994}, {"prompt": 159930, "ttft": 0.8455548}, {"prompt": 162036, "ttft": 0.3767283}, {"prompt": 166193, "ttft": 2.0230939}, {"prompt": 166662, "ttft": 0.3871548}, {"prompt": 167096, "ttft": 0.38806609999999997}, {"prompt": 167744, "ttft": 0.5048335}, {"prompt": 169426, "ttft": 0.5512654}, {"prompt": 171824, "ttft": 0.3937249}, {"prompt": 172184, "ttft": 0.3971348}, {"prompt": 174325, "ttft": 0.5517715}, {"prompt": 174724, "ttft": 0.3582915}, {"prompt": 176310, "ttft": 0.586834}, {"prompt": 177733, "ttft": 0.42195699999999997}, {"prompt": 177958, "ttft": 0.6070072}, {"prompt": 174594, "ttft": 52.7116124}, {"prompt": 179556, "ttft": 75.1083738}, {"prompt": 181848, "ttft": 0.7538507999999999}, {"prompt": 182953, "ttft": 0.5931527000000001}, {"prompt": 186661, "ttft": 0.7637608}, {"prompt": 187633, "ttft": 0.6153773}, {"prompt": 188587, "ttft": 0.4019213}, {"prompt": 189133, "ttft": 0.43543139999999997}, {"prompt": 189402, "ttft": 0.40643260000000003}, {"prompt": 189745, "ttft": 0.6267672000000001}, {"prompt": 191742, "ttft": 0.7922194}, {"prompt": 192245, "ttft": 0.5945941}, {"prompt": 195040, "ttft": 0.43976650000000006}, {"prompt": 195292, "ttft": 0.6301915}, {"prompt": 196238, "ttft": 0.9882476999999998}, {"prompt": 197520, "ttft": 0.4221832}, {"prompt": 198446, "ttft": 0.44016430000000006}, {"prompt": 194447, "ttft": 63.8323812}, {"prompt": 199409, "ttft": 87.6692702}, {"prompt": 200491, "ttft": 0.459621}, {"prompt": 200836, "ttft": 0.450839}, {"prompt": 201345, "ttft": 0.5515462}, {"prompt": 202193, "ttft": 0.4565906}, {"prompt": 202608, "ttft": 0.4286635}, {"prompt": 202844, "ttft": 0.4521628000000001}, {"prompt": 203589, "ttft": 0.4795360999999999}, {"prompt": 204075, "ttft": 0.4582926}, {"prompt": 47208, "ttft": 6.9635652}, {"prompt": 48449, "ttft": 0.2771484}, {"prompt": 51110, "ttft": 0.2159994}, {"prompt": 51808, "ttft": 0.19275520000000002}, {"prompt": 52548, "ttft": 0.2096669}, {"prompt": 53247, "ttft": 0.216488}, {"prompt": 53908, "ttft": 0.2111577}, {"prompt": 54479, "ttft": 0.2165209}, {"prompt": 55063, "ttft": 0.20852559999999998}, {"prompt": 55644, "ttft": 0.1927936}, {"prompt": 56321, "ttft": 0.2186918}, {"prompt": 59087, "ttft": 0.2103128}, {"prompt": 59658, "ttft": 0.3480561}, {"prompt": 59883, "ttft": 0.19289830000000002}, {"prompt": 60208, "ttft": 0.23991389999999999}, {"prompt": 61289, "ttft": 0.26726990000000006}, {"prompt": 62289, "ttft": 0.2058196}, {"prompt": 63011, "ttft": 0.2010863}, {"prompt": 63885, "ttft": 0.2115727}, {"prompt": 65002, "ttft": 0.236565}, {"prompt": 65446, "ttft": 0.2290817}, {"prompt": 66050, "ttft": 0.21759990000000004}, {"prompt": 68575, "ttft": 0.4529806}, {"prompt": 69750, "ttft": 0.24244949999999998}, {"prompt": 71896, "ttft": 0.4884117}, {"prompt": 73568, "ttft": 0.42756970000000005}, {"prompt": 75074, "ttft": 0.2593827}, {"prompt": 76787, "ttft": 0.3445332}, {"prompt": 77966, "ttft": 0.32848160000000004}, {"prompt": 79151, "ttft": 0.2506245}, {"prompt": 80251, "ttft": 0.3937949}, {"prompt": 80859, "ttft": 0.26363119999999995}, {"prompt": 83016, "ttft": 0.7470467000000001}, {"prompt": 84620, "ttft": 0.36742790000000003}, {"prompt": 85615, "ttft": 0.31082459999999995}, {"prompt": 87646, "ttft": 0.4036466}, {"prompt": 88327, "ttft": 0.32447929999999997}, {"prompt": 89176, "ttft": 0.2558378}, {"prompt": 90408, "ttft": 0.36220090000000005}, {"prompt": 91429, "ttft": 0.4915613}, {"prompt": 92316, "ttft": 0.3237697}, {"prompt": 93439, "ttft": 0.3417698}, {"prompt": 95367, "ttft": 0.4683137}, {"prompt": 96450, "ttft": 0.3409462}, {"prompt": 97252, "ttft": 0.2556527}, {"prompt": 97703, "ttft": 0.24163929999999997}, {"prompt": 98080, "ttft": 0.2450079}, {"prompt": 98643, "ttft": 0.3902489}, {"prompt": 99216, "ttft": 0.23607670000000003}, {"prompt": 100348, "ttft": 0.37802579999999997}, {"prompt": 101159, "ttft": 0.3540975}, {"prompt": 102047, "ttft": 0.3864943999999999}, {"prompt": 102474, "ttft": 0.2807056}, {"prompt": 103068, "ttft": 0.2888843}, {"prompt": 103520, "ttft": 0.2616486}, {"prompt": 103934, "ttft": 0.5064096}, {"prompt": 104364, "ttft": 0.27152220000000005}, {"prompt": 105920, "ttft": 0.7120708}, {"prompt": 106373, "ttft": 0.2635942}, {"prompt": 106914, "ttft": 0.3653279}, {"prompt": 107633, "ttft": 0.28449899999999995}, {"prompt": 109194, "ttft": 0.412765}, {"prompt": 110510, "ttft": 0.3974128}, {"prompt": 111136, "ttft": 0.281411}, {"prompt": 111338, "ttft": 0.26568990000000003}, {"prompt": 111832, "ttft": 0.44213230000000003}, {"prompt": 112407, "ttft": 0.4026221}, {"prompt": 113291, "ttft": 0.38184149999999994}, {"prompt": 114044, "ttft": 0.29733849999999995}, {"prompt": 114479, "ttft": 0.27923790000000004}, {"prompt": 115287, "ttft": 0.29266230000000004}, {"prompt": 115691, "ttft": 0.29401750000000004}, {"prompt": 116039, "ttft": 0.2805189}, {"prompt": 117880, "ttft": 0.3014606}, {"prompt": 119085, "ttft": 0.28999389999999997}, {"prompt": 121043, "ttft": 0.30510760000000003}, {"prompt": 121574, "ttft": 0.29250529999999997}, {"prompt": 123145, "ttft": 0.2989544}, {"prompt": 123720, "ttft": 0.2969718}, {"prompt": 124228, "ttft": 0.30026739999999996}, {"prompt": 125080, "ttft": 0.2907272}, {"prompt": 125830, "ttft": 0.3122074}, {"prompt": 126552, "ttft": 0.3008733}, {"prompt": 127394, "ttft": 0.4462043}, {"prompt": 128083, "ttft": 0.3124680000000001}, {"prompt": 129288, "ttft": 0.30261669999999996}, {"prompt": 129756, "ttft": 0.31326010000000004}, {"prompt": 131617, "ttft": 0.596473}, {"prompt": 133136, "ttft": 0.3400725}, {"prompt": 134228, "ttft": 0.46588759999999996}, {"prompt": 136325, "ttft": 0.8770613}, {"prompt": 137529, "ttft": 0.3503239}, {"prompt": 137859, "ttft": 0.31574050000000004}, {"prompt": 138317, "ttft": 0.3257309}, {"prompt": 139060, "ttft": 0.504376}, {"prompt": 139526, "ttft": 0.3308218}, {"prompt": 140245, "ttft": 0.5387843}, {"prompt": 140927, "ttft": 0.3369915}, {"prompt": 141173, "ttft": 0.45531710000000003}, {"prompt": 142279, "ttft": 0.35902219999999996}, {"prompt": 143702, "ttft": 0.3677206}, {"prompt": 146187, "ttft": 0.7279163}, {"prompt": 147925, "ttft": 0.3766292}, {"prompt": 148788, "ttft": 0.6154868}, {"prompt": 149433, "ttft": 0.3531178}, {"prompt": 150074, "ttft": 0.5368395}, {"prompt": 149939, "ttft": 0.1122779}, {"prompt": 149939, "ttft": 28.5293058}, {"prompt": 150783, "ttft": 0.37292140000000007}, {"prompt": 151239, "ttft": 0.35162530000000003}, {"prompt": 152221, "ttft": 0.517528}, {"prompt": 152699, "ttft": 0.3797701}, {"prompt": 154141, "ttft": 0.6886125999999999}, {"prompt": 155574, "ttft": 0.5081956000000001}, {"prompt": 157882, "ttft": 0.43392129999999995}, {"prompt": 158429, "ttft": 0.3691632}, {"prompt": 159704, "ttft": 0.5231694}, {"prompt": 160744, "ttft": 0.47437950000000007}, {"prompt": 160602, "ttft": 5.785832200000001}, {"prompt": 161578, "ttft": 0.3967703}, {"prompt": 162686, "ttft": 0.5610934}, {"prompt": 163172, "ttft": 0.3925189}, {"prompt": 164398, "ttft": 0.5151215}, {"prompt": 165068, "ttft": 0.5304344}, {"prompt": 165926, "ttft": 0.5656451}, {"prompt": 166866, "ttft": 0.4220474}, {"prompt": 167537, "ttft": 0.4162481}, {"prompt": 168246, "ttft": 0.5765532}, {"prompt": 171391, "ttft": 0.5939508}], "avg_decode_speed": 294.1, "max_decode_speed": 484.7};
+    const scorecardData = [{"datetime": "2026-09-27 08:22", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 14.8, "turns": 6, "wallclock": 5.3, "ttft": 0.36, "thinking": 477, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 08:24", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 46.8, "turns": 10, "wallclock": 12.9, "ttft": 0.38, "thinking": 1694, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:25", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 44.4, "turns": 10, "wallclock": 12.5, "ttft": 0.6, "thinking": 1093, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:25", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 22.8, "turns": 10, "wallclock": 10.0, "ttft": 0.53, "thinking": 642, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:26", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 109.9, "turns": 10, "wallclock": 16.1, "ttft": 0.61, "thinking": 2190, "cap_hits": "1/10", "loops": 5}, {"datetime": "2026-09-27 08:28", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3_Swift15-DFlash2", "profile": "Swift15-DFlash2", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 61.2, "turns": 10, "wallclock": 15.1, "ttft": 0.58, "thinking": 1805, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:38", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 65.7, "turns": 10, "wallclock": 13.1, "ttft": 0.49, "thinking": 1628, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:38", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 36.7, "turns": 10, "wallclock": 12.6, "ttft": 0.57, "thinking": 1201, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:39", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 47.4, "turns": 10, "wallclock": 12.8, "ttft": 0.57, "thinking": 1231, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:39", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 42.6, "turns": 10, "wallclock": 9.7, "ttft": 0.32, "thinking": 1146, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:40", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 46.4, "turns": 10, "wallclock": 12.8, "ttft": 0.56, "thinking": 1182, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:44", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 74.9, "turns": 10, "wallclock": 19.5, "ttft": 0.48, "thinking": 1774, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:44", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 42.8, "turns": 10, "wallclock": 17.4, "ttft": 0.62, "thinking": 1268, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:45", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 40.0, "turns": 10, "wallclock": 15.6, "ttft": 0.54, "thinking": 1223, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:46", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 219.8, "turns": 10, "wallclock": 33.5, "ttft": 0.75, "thinking": 3816, "cap_hits": "2/10", "loops": 11}, {"datetime": "2026-09-27 08:47", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 87.2, "turns": 10, "wallclock": 23.0, "ttft": 0.72, "thinking": 2212, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 08:48", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 62.1, "turns": 10, "wallclock": 19.7, "ttft": 0.66, "thinking": 1621, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 08:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 128.8, "turns": 10, "wallclock": 20.7, "ttft": 0.67, "thinking": 1905, "cap_hits": "0/10", "loops": 7}, {"datetime": "2026-09-27 08:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 131.9, "turns": 10, "wallclock": 16.4, "ttft": 0.3, "thinking": 1775, "cap_hits": "0/10", "loops": 8}, {"datetime": "2026-09-27 08:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 90.0, "loss": 73.4, "turns": 10, "wallclock": 19.6, "ttft": 0.68, "thinking": 1690, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 08:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 219.0, "turns": 10, "wallclock": 27.6, "ttft": 0.71, "thinking": 3067, "cap_hits": "1/10", "loops": 13}, {"datetime": "2026-09-27 09:08", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 75.0, "loss": 61.5, "turns": 6, "wallclock": 3.7, "ttft": 0.14, "thinking": 389, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 57.5, "turns": 6, "wallclock": 3.2, "ttft": 0.14, "thinking": 215, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 11.3, "turns": 6, "wallclock": 4.0, "ttft": 0.15, "thinking": 364, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:09", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 9.3, "turns": 6, "wallclock": 3.1, "ttft": 0.15, "thinking": 307, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 12.5, "turns": 6, "wallclock": 4.4, "ttft": 0.16, "thinking": 405, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 11.8, "turns": 6, "wallclock": 6.0, "ttft": 0.18, "thinking": 289, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 62.4, "turns": 6, "wallclock": 6.4, "ttft": 0.29, "thinking": 303, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 50.0, "loss": 107.3, "turns": 6, "wallclock": 3.9, "ttft": 0.16, "thinking": 172, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 65.0, "loss": 82.2, "turns": 6, "wallclock": 5.9, "ttft": 0.18, "thinking": 316, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 11.3, "turns": 6, "wallclock": 5.1, "ttft": 0.18, "thinking": 311, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 75.0, "loss": 63.2, "turns": 6, "wallclock": 6.9, "ttft": 0.31, "thinking": 317, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 90.0, "loss": 30.7, "turns": 6, "wallclock": 5.0, "ttft": 0.18, "thinking": 281, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:13", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 13.4, "turns": 6, "wallclock": 5.8, "ttft": 0.17, "thinking": 382, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 68.3, "turns": 6, "wallclock": 8.0, "ttft": 0.3, "thinking": 519, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 9.5, "turns": 6, "wallclock": 5.4, "ttft": 0.28, "thinking": 205, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 96.4, "turns": 15, "wallclock": 18.1, "ttft": 0.7, "thinking": 915, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.2_Swift15-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 110.2, "turns": 15, "wallclock": 13.7, "ttft": 0.58, "thinking": 323, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.3_Swift15-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 77.8, "turns": 15, "wallclock": 12.2, "ttft": 0.5, "thinking": 276, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 09:16", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 85.0, "loss": 82.8, "turns": 15, "wallclock": 21.6, "ttft": 0.68, "thinking": 1558, "cap_hits": "1/15", "loops": 0}, {"datetime": "2026-09-27 10:06", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.5_Swift15-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 55.0, "loss": 113.9, "turns": 15, "wallclock": 16.4, "ttft": 0.73, "thinking": 376, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.1_Swift10-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 55.0, "loss": 120.9, "turns": 15, "wallclock": 21.3, "ttft": 0.8, "thinking": 478, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.2_Swift10-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 109.9, "turns": 15, "wallclock": 15.6, "ttft": 0.63, "thinking": 216, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:08", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.3_Swift10-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 98.5, "turns": 15, "wallclock": 24.4, "ttft": 0.91, "thinking": 708, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:09", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 55.0, "loss": 121.4, "turns": 15, "wallclock": 20.0, "ttft": 0.71, "thinking": 572, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:10", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-2.5_Swift10-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 80.2, "turns": 15, "wallclock": 16.2, "ttft": 0.63, "thinking": 198, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.1_Swift15-MTP_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 85.0, "loss": 122.6, "turns": 15, "wallclock": 36.8, "ttft": 0.84, "thinking": 2788, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.2_Swift15-MTP_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 115.9, "turns": 15, "wallclock": 18.5, "ttft": 0.68, "thinking": 368, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:12", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.3_Swift15-MTP_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 55.0, "loss": 119.2, "turns": 15, "wallclock": 20.4, "ttft": 0.81, "thinking": 441, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 70.0, "loss": 80.5, "turns": 15, "wallclock": 15.5, "ttft": 0.61, "thinking": 250, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-3.5_Swift15-MTP_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 93.1, "turns": 15, "wallclock": 23.4, "ttft": 0.9, "thinking": 484, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 10:48", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.6_Swift15-DFlash2_Draft-3_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 36.8, "turns": 10, "wallclock": 14.1, "ttft": 0.61, "thinking": 1132, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 19.7, "turns": 10, "wallclock": 8.4, "ttft": 0.4, "thinking": 565, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:49", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.8_Swift15-DFlash2_Draft-9_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 294.8, "turns": 10, "wallclock": 24.6, "ttft": 0.61, "thinking": 4011, "cap_hits": "2/10", "loops": 19}, {"datetime": "2026-09-27 10:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.9_Swift15-DFlash2_Prefill_Chunk_2048", "profile": "2048", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 40.8, "turns": 10, "wallclock": 13.9, "ttft": 0.58, "thinking": 1347, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 10:50", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.1_Swift15-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 40.5, "turns": 10, "wallclock": 11.5, "ttft": 0.56, "thinking": 951, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 45.2, "turns": 10, "wallclock": 12.7, "ttft": 0.56, "thinking": 1124, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 60.0, "loss": 88.3, "turns": 6, "wallclock": 3.0, "ttft": 0.13, "thinking": 263, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 10:51", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-1.7_Swift15-DFlash2_Draft-5_Window", "profile": "Window", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 83.2, "turns": 15, "wallclock": 15.4, "ttft": 0.64, "thinking": 389, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:05", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 73.1, "turns": 10, "wallclock": 16.1, "ttft": 0.47, "thinking": 1850, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 11:06", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 25.0, "turns": 6, "wallclock": 8.5, "ttft": 0.24, "thinking": 825, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:06", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.1_Base-DFlash2_Author_Baseline", "profile": "Author Baseline", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 109.0, "turns": 15, "wallclock": 25.0, "ttft": 0.87, "thinking": 1199, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 87.7, "turns": 10, "wallclock": 10.5, "ttft": 0.33, "thinking": 861, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 75.0, "loss": 69.1, "turns": 6, "wallclock": 7.8, "ttft": 0.3, "thinking": 569, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:07", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.2_Base-DFlash2_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 55.0, "loss": 112.2, "turns": 15, "wallclock": 16.6, "ttft": 0.73, "thinking": 278, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:08", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 46.2, "turns": 10, "wallclock": 15.4, "ttft": 0.79, "thinking": 1041, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:08", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 90.0, "loss": 31.4, "turns": 6, "wallclock": 5.1, "ttft": 0.23, "thinking": 318, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:09", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.3_Base-DFlash2_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 103.4, "turns": 15, "wallclock": 24.4, "ttft": 0.91, "thinking": 950, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 46.0, "turns": 10, "wallclock": 17.0, "ttft": 0.74, "thinking": 1448, "cap_hits": "0/10", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 67.5, "turns": 6, "wallclock": 6.5, "ttft": 0.2, "thinking": 552, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:10", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 85.0, "loss": 67.6, "turns": 15, "wallclock": 22.6, "ttft": 0.84, "thinking": 750, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 46.0, "turns": 10, "wallclock": 12.0, "ttft": 0.67, "thinking": 699, "cap_hits": "0/10", "loops": 2}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 75.0, "loss": 62.4, "turns": 6, "wallclock": 5.6, "ttft": 0.29, "thinking": 337, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:11", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-4.5_Base-DFlash2_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 55.0, "loss": 134.2, "turns": 15, "wallclock": 24.8, "ttft": 0.97, "thinking": 969, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:12", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 63.8, "turns": 10, "wallclock": 21.3, "ttft": 0.76, "thinking": 1625, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:12", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 100.0, "loss": 10.8, "turns": 6, "wallclock": 5.8, "ttft": 0.18, "thinking": 251, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:13", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.1_Base-NVFP4_Author_Baseline", "profile": "Author Baseline", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.9, "min_p": 0.05, "penalty": 0.0, "budget": 4096, "quality": 70.0, "loss": 84.6, "turns": 15, "wallclock": 17.9, "ttft": 0.61, "thinking": 334, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 100.0, "loss": 195.9, "turns": 10, "wallclock": 39.4, "ttft": 0.81, "thinking": 4326, "cap_hits": "1/10", "loops": 7}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 65.0, "loss": 84.6, "turns": 6, "wallclock": 7.0, "ttft": 0.3, "thinking": 383, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:14", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.2_Base-NVFP4_Qwen_Precise_Code", "profile": "Qwen Precise Code", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.08, "penalty": 0.0, "budget": 2048, "quality": 70.0, "loss": 98.3, "turns": 15, "wallclock": 25.5, "ttft": 0.94, "thinking": 640, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 100.0, "loss": 78.6, "turns": 10, "wallclock": 18.8, "ttft": 0.7, "thinking": 1490, "cap_hits": "0/10", "loops": 3}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 90.0, "loss": 33.3, "turns": 6, "wallclock": 6.5, "ttft": 0.22, "thinking": 337, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:15", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.3_Base-NVFP4_Mild_Loop-Damped", "profile": "Mild Loop-Damped", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.7, "min_p": 0.05, "penalty": 0.1, "budget": 2048, "quality": 70.0, "loss": 101.9, "turns": 15, "wallclock": 26.4, "ttft": 0.92, "thinking": 773, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:16", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 128.6, "turns": 10, "wallclock": 21.5, "ttft": 0.71, "thinking": 1859, "cap_hits": "1/10", "loops": 7}, {"datetime": "2026-09-27 11:16", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 75.0, "loss": 63.3, "turns": 6, "wallclock": 6.2, "ttft": 0.18, "thinking": 357, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 55.0, "loss": 122.1, "turns": 15, "wallclock": 23.5, "ttft": 0.85, "thinking": 430, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 1 (SpringArm Bug)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 75.0, "loss": 80.8, "turns": 10, "wallclock": 12.2, "ttft": 0.62, "thinking": 429, "cap_hits": "0/10", "loops": 1}, {"datetime": "2026-09-27 11:17", "scenario": "Scenario 2 (Phantom IK Trap)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 100.0, "loss": 13.5, "turns": 6, "wallclock": 6.9, "ttft": 0.31, "thinking": 332, "cap_hits": "0/6", "loops": 0}, {"datetime": "2026-09-27 11:18", "scenario": "Scenario 3 (Combiner Mech 15-Turn)", "config": "Config-5.5_Base-NVFP4_Tuned_Local_Minima", "profile": "Tuned Local Minima", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.6, "min_p": 0.05, "penalty": 0.08, "budget": 1600, "quality": 70.0, "loss": 99.7, "turns": 15, "wallclock": 26.2, "ttft": 0.92, "thinking": 675, "cap_hits": "0/15", "loops": 0}, {"datetime": "2026-10-02 07:03", "scenario": "Scenario 4 (200k Context Drift M-NIAH)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 56.9, "turns": 1, "wallclock": 61.4, "ttft": 56.92, "thinking": 854, "cap_hits": "0/1", "loops": 0}, {"datetime": "2026-10-02 07:03", "scenario": "Scenario 4 (200k Context Drift M-NIAH)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 65.2, "turns": 1, "wallclock": 71.5, "ttft": 65.2, "thinking": 1200, "cap_hits": "0/1", "loops": 0}, {"datetime": "2026-10-02 07:03", "scenario": "Scenario 4 (200k Context Drift M-NIAH)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 62.5, "turns": 1, "wallclock": 69.1, "ttft": 62.47, "thinking": 740, "cap_hits": "0/1", "loops": 0}, {"datetime": "2026-10-02 07:03", "scenario": "Scenario 4 (200k Context Drift M-NIAH)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 62.4, "turns": 1, "wallclock": 70.1, "ttft": 62.42, "thinking": 810, "cap_hits": "0/1", "loops": 0}, {"datetime": "2026-10-02 07:03", "scenario": "Scenario 4 (200k Context Drift M-NIAH)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 100.0, "loss": 64.7, "turns": 1, "wallclock": 72.3, "ttft": 64.72, "thinking": 810, "cap_hits": "0/1", "loops": 0}, {"datetime": "2026-10-02 07:35", "scenario": "Scenario 5 (200k 20-Turn Progressive Drift)", "config": "Config-1.4_Swift15-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-DFlash2", "model": "qwen3.8-27b-swift15-nvfp4full-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 94.4, "loss": 208.3, "turns": 20, "wallclock": 208.3, "ttft": 3.46, "thinking": 7420, "cap_hits": "0/20", "loops": 0}, {"datetime": "2026-10-02 07:35", "scenario": "Scenario 5 (200k 20-Turn Progressive Drift)", "config": "Config-4.4_Base-DFlash2_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-DFlash2", "model": "qwen3.8-27b-nvfp4-dflash2", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 98.4, "loss": 233.3, "turns": 20, "wallclock": 233.3, "ttft": 3.79, "thinking": 8110, "cap_hits": "0/20", "loops": 0}, {"datetime": "2026-10-02 07:35", "scenario": "Scenario 5 (200k 20-Turn Progressive Drift)", "config": "Config-2.4_Swift10-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift10-MTP", "model": "qwen3.8-27b-nvfp4-swift", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 96.8, "loss": 256.0, "turns": 20, "wallclock": 256.0, "ttft": 3.62, "thinking": 7890, "cap_hits": "0/20", "loops": 0}, {"datetime": "2026-10-02 07:35", "scenario": "Scenario 5 (200k 20-Turn Progressive Drift)", "config": "Config-3.4_Swift15-MTP_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Swift15-MTP", "model": "qwen3.8-27b-nvfp4-swift15", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 95.2, "loss": 346.1, "turns": 20, "wallclock": 346.1, "ttft": 4.07, "thinking": 9450, "cap_hits": "0/20", "loops": 0}, {"datetime": "2026-10-02 07:35", "scenario": "Scenario 5 (200k 20-Turn Progressive Drift)", "config": "Config-5.4_Base-NVFP4_Tight_Agentic_Budget", "profile": "Tight Agentic Budget", "family": "Base-NVFP4", "model": "qwen3.8-27b-nvfp4", "temp": 0.65, "min_p": 0.05, "penalty": 0.05, "budget": 1200, "quality": 96.8, "loss": 292.9, "turns": 20, "wallclock": 292.9, "ttft": 3.79, "thinking": 8920, "cap_hits": "0/20", "loops": 0}];
+    const dflash2Data = {"total_requests": 4958, "position_decay": [{"position": 1, "drafted": 511780, "accepted": 441429, "rate": 86.25}, {"position": 2, "drafted": 511780, "accepted": 362594, "rate": 70.85}, {"position": 3, "drafted": 511780, "accepted": 292844, "rate": 57.22}, {"position": 4, "drafted": 511241, "accepted": 235891, "rate": 46.14}, {"position": 5, "drafted": 511241, "accepted": 191586, "rate": 37.47}, {"position": 6, "drafted": 509941, "accepted": 158120, "rate": 31.01}, {"position": 7, "drafted": 509941, "accepted": 132884, "rate": 26.06}], "context_curve": [{"bucket": "0 - 4k", "reqs": 236, "rate": 45.93, "avg_ttft": 0.153, "avg_speed": 303.3}, {"bucket": "4k - 16k", "reqs": 87, "rate": 39.59, "avg_ttft": 0.901, "avg_speed": 253.4}, {"bucket": "16k - 32k", "reqs": 87, "rate": 41.73, "avg_ttft": 0.861, "avg_speed": 248.7}, {"bucket": "32k - 64k", "reqs": 669, "rate": 49.41, "avg_ttft": 0.756, "avg_speed": 306.2}, {"bucket": "64k - 240k", "reqs": 3879, "rate": 51.67, "avg_ttft": 2.929, "avg_speed": 294.1}], "decode_speeds": [178.88868217307834, 213.40569008864094, 138.88986847237928, 256.90815587995274, 160.5616373948774, 280.36500511933156, 193.42549984418199, 176.06137499532338, 107.81864903232761, 278.65664385006187, 105.97785769293269, 232.35234853737433, 169.20011297361393, 345.2606502121195, 225.1924738061861, 252.20016889480485, 224.43857339064377, 242.06439623587633, 226.20800794199283, 241.0667143312397, 196.57409838245545, 203.49046494244965, 187.24406910161855, 263.71731230952633, 234.99166347706372, 266.8107966946298, 201.62782520784415, 236.16861662647705, 202.23129703416365, 194.85075654567837, 294.4368223475192, 224.75750939888533, 203.43728552810106, 200.28382383067336, 233.99629739555294, 349.4732777587983, 228.438341722007, 189.49150251782626, 295.57462264499503, 206.75726714660883, 243.10702107991418, 253.5639910494894, 185.59703824800397, 217.43426703769703, 174.41485688526757, 191.82555676302644, 235.40406923542793, 240.05190896918756, 221.05736111310364, 185.06182754337863, 189.25189864279102, 214.88842249936465, 107.75204100324335, 197.01482140831865, 265.09476527530285, 182.6733741429124, 199.21088934354106, 216.0690556701922, 188.00797970061492, 244.3623985091258, 206.41044748662534, 300.4299937603352, 344.68638786147307, 401.29061327629665, 399.860961731732, 189.48591388785567, 313.88249322380625, 209.29763172753104, 296.2314098333029, 259.4934381554737, 223.8065724343599, 279.6367097047788, 240.88138753257536, 238.0163258725025, 279.0159753714, 265.634218854741, 236.73376512738866, 331.8563007814943, 324.88159870624935, 220.81752958524734, 208.96025303105435, 266.61451927437093, 275.2562787472354, 327.39689127335544, 233.07316826554575, 232.77637937526418, 222.0158215485459, 261.53825029602854, 231.5766448762979, 228.48188126608548, 246.81825667061815, 278.1889208124465, 232.2191331038723, 296.5213392978002, 263.01360890746236, 235.48536809326097, 274.470169646269, 278.494232646978, 187.04733196764806, 215.16062301869792, 231.72457434464775, 351.4836819699777, 289.5005759537774, 222.25560519264064, 206.394618048812, 286.6180827161054, 228.1007278483242, 223.46261554422995, 309.04617945485467, 328.8592356731023, 286.3067540597186, 343.63580661807623, 201.9010918892689, 199.3955030762705, 233.92799015020748, 275.3510192822746, 212.27626749992172, 209.79502670473497, 201.28442152706208, 226.16615224772036, 279.6264596094487, 171.8810689556405, 247.32440520941478, 351.82723006752326, 263.7630799335564, 239.7524705689093, 243.53582555695198, 264.20933020699175, 208.1950356354363, 215.45791627711122, 212.61465795734588, 262.0387462150884, 227.48997884193537, 311.9752951477068, 268.91648845464414, 210.9138138897969, 275.0710756823363, 264.84281346702477, 320.0686376317278, 241.35860053253555, 211.89500476661024, 341.1055282346842, 224.24755875203596, 188.89382111644028, 203.09002127492028, 215.2318297253748, 188.97184016107462, 200.3995110159046, 257.18026518142904, 231.99900417548852, 237.92571197909734, 342.7947868530582, 216.6564821060511, 189.12787276158076, 194.73082926597914, 208.7038427307074, 226.1957742466259, 193.28558105672437, 228.17177272193163, 268.72831618420116, 233.89262956543863, 220.27126291081083, 329.95979575488667, 217.671394622287, 256.7036319896732, 233.83678043150104, 326.34669781041254, 281.3939661188423, 221.55792838635074, 374.6109314279372, 208.9376422987565, 367.60324303355907, 314.56110280743604, 392.20854198827766, 351.3077104235599, 388.9696999942754, 462.20790111392114, 484.7199029545073, 270.00161194992216, 271.86016746165905, 285.9246386012599, 281.9673240244783, 279.7377351141869, 319.54670658755043, 269.02326829722205, 243.14923912099755, 287.385786324765, 241.91729665671318, 233.4782225934676, 224.45669923645136, 404.20634780515957, 273.8489410397402, 239.0146758006647, 243.30478842779075, 250.60441736706764, 272.9286752669524, 292.1527528469761, 278.7363102242218, 296.5709694567547, 261.730144981703, 290.6833764684343, 283.1121712842191, 290.35104152953454, 237.33212520590993, 246.29963730526532, 261.9728178337149, 262.3371083604012, 240.90715873729602, 261.6972124330452, 254.17302687597333, 240.31349077851877, 284.53983857542556, 247.952090077275, 272.689222951317, 264.1619600479007, 267.77872648762855, 269.5264536718978, 239.75977355999424, 285.38502938380105, 219.1729595196929, 242.4278550746317, 296.1439367221174, 267.1308565033007, 300.9836087365003, 296.51534737128475, 305.4180665688219, 347.8491987116235, 328.9998399134924, 266.0167203600415, 333.4421924020294, 334.6233404560302, 237.908862745661, 305.29677490280267, 364.095720764989, 252.43280223688726, 290.50017570575153, 320.34473839699484, 217.49054862472664, 281.1191689608342, 296.2165027799497, 245.58346359934433, 319.9095387824451, 310.7494858859127, 242.718038881522, 262.6783518503805, 254.6363828829057, 267.2410476802286, 265.63928040016015, 266.8024723559734, 312.1272850897629, 265.80788239389756, 250.6304382997948, 280.31984141301666, 232.09955399749705, 252.11103790374838, 230.01921104383104, 326.01006067047217, 297.4052208278153, 269.72683450140437, 248.95270335232468, 243.75457179589642, 273.5889378751999, 223.07602858220952, 259.645477762388, 309.36468178318387, 253.95258177763864, 228.15139419072307, 269.2744495745545, 258.4536535165099, 231.7451623410361, 246.394046474671, 234.02559747350864, 266.9396621625012, 276.8066380894765, 241.21623402443785, 271.0364796735719, 226.60726483687054, 222.38092155082367, 329.901336484019, 275.5626213708521, 345.2720123046312, 273.52050783452967, 239.04984879806963, 250.14597851377005, 255.55709474233316, 252.22365641705466, 254.25499026355484, 199.40934374384977, 242.05495608936462, 261.723449380702, 342.9843985903715, 240.83844339998186, 268.49311953584805, 225.40755034848812, 226.4661853096053, 295.2711352421839, 194.61400164839816, 253.00870761713517, 219.98207473977436, 266.1842697873397], "ttft_points": [{"prompt": 402, "ttft": 0.1301184}, {"prompt": 1879, "ttft": 0.57432}, {"prompt": 81441, "ttft": 15.951500600000001}, {"prompt": 1879, "ttft": 0.2183035}, {"prompt": 81441, "ttft": 11.2730571}, {"prompt": 1879, "ttft": 0.3506208}, {"prompt": 81441, "ttft": 11.387755}, {"prompt": 19222, "ttft": 1.6821589}, {"prompt": 125, "ttft": 0.2075777}, {"prompt": 19293, "ttft": 0.2879932}, {"prompt": 358, "ttft": 0.101834}, {"prompt": 27746, "ttft": 0.9453802}, {"prompt": 196, "ttft": 0.3735514}, {"prompt": 57, "ttft": 0.4176111}, {"prompt": 28955, "ttft": 0.4409389}, {"prompt": 34571, "ttft": 0.5918057}, {"prompt": 44215, "ttft": 1.3193924}, {"prompt": 61498, "ttft": 2.6961456}, {"prompt": 75821, "ttft": 2.7745236}, {"prompt": 90791, "ttft": 3.1877766}, {"prompt": 105402, "ttft": 3.5988925999999997}, {"prompt": 120563, "ttft": 3.4341997}, {"prompt": 124561, "ttft": 0.3622906}, {"prompt": 125459, "ttft": 0.3670087}, {"prompt": 126308, "ttft": 0.37415880000000007}, {"prompt": 128104, "ttft": 0.5359007}, {"prompt": 130394, "ttft": 0.780848}, {"prompt": 132649, "ttft": 0.39639159999999996}, {"prompt": 134657, "ttft": 0.4545309}, {"prompt": 137464, "ttft": 0.6810729000000001}, {"prompt": 138290, "ttft": 0.3249679}, {"prompt": 141112, "ttft": 0.98206}, {"prompt": 143673, "ttft": 0.4767192}, {"prompt": 146993, "ttft": 0.4591036}, {"prompt": 151759, "ttft": 0.5941422}, {"prompt": 155225, "ttft": 0.28689649999999994}, {"prompt": 155980, "ttft": 0.31571309999999997}, {"prompt": 156577, "ttft": 0.37765329999999997}, {"prompt": 159513, "ttft": 0.9560037}, {"prompt": 170034, "ttft": 3.9670503999999998}, {"prompt": 170467, "ttft": 0.3177155}, {"prompt": 171218, "ttft": 0.4813776}, {"prompt": 171648, "ttft": 0.3269242}, {"prompt": 172128, "ttft": 0.3213823}, {"prompt": 172918, "ttft": 0.48593280000000005}, {"prompt": 173768, "ttft": 0.3435808}, {"prompt": 175779, "ttft": 0.4481075}, {"prompt": 178990, "ttft": 0.8535838}, {"prompt": 174882, "ttft": 45.0054722}, {"prompt": 179596, "ttft": 25.0416298}, {"prompt": 181923, "ttft": 1.4066722}, {"prompt": 183771, "ttft": 49.8794439}, {"prompt": 677, "ttft": 0.1152845}, {"prompt": 189709, "ttft": 1.7995718}, {"prompt": 194706, "ttft": 0.9382263000000001}, {"prompt": 196390, "ttft": 0.5793955}, {"prompt": 196974, "ttft": 55.6298327}, {"prompt": 203743, "ttft": 58.873908899999996}, {"prompt": 204149, "ttft": 59.354111}, {"prompt": 49318, "ttft": 6.0959089}, {"prompt": 51367, "ttft": 0.1544567}, {"prompt": 54253, "ttft": 0.569283}, {"prompt": 59523, "ttft": 0.2751121}, {"prompt": 62463, "ttft": 0.2816062}, {"prompt": 64116, "ttft": 0.2281616}, {"prompt": 66604, "ttft": 0.39390729999999996}, {"prompt": 69664, "ttft": 0.7393634}, {"prompt": 73707, "ttft": 0.3283872}, {"prompt": 74973, "ttft": 0.5410075}, {"prompt": 77454, "ttft": 0.6956469}, {"prompt": 81980, "ttft": 0.23784419999999998}, {"prompt": 82834, "ttft": 0.3532851}, {"prompt": 83159, "ttft": 0.2708695}, {"prompt": 84432, "ttft": 0.5146648}, {"prompt": 85685, "ttft": 0.3683901}, {"prompt": 88117, "ttft": 0.2475069}, {"prompt": 89715, "ttft": 0.4639832}, {"prompt": 91133, "ttft": 0.23552460000000003}, {"prompt": 91432, "ttft": 0.2478985}, {"prompt": 91708, "ttft": 0.2511639}, {"prompt": 91890, "ttft": 0.2393693}, {"prompt": 92642, "ttft": 0.45080380000000003}, {"prompt": 93375, "ttft": 0.36356579999999994}, {"prompt": 93738, "ttft": 0.26354089999999997}, {"prompt": 93958, "ttft": 0.46163760000000004}, {"prompt": 95607, "ttft": 0.7005252}, {"prompt": 96889, "ttft": 0.3642122}, {"prompt": 98245, "ttft": 0.3832017}, {"prompt": 99411, "ttft": 0.4938241}, {"prompt": 100115, "ttft": 0.3966193}, {"prompt": 101119, "ttft": 0.5572703}, {"prompt": 102148, "ttft": 0.4150321}, {"prompt": 102831, "ttft": 0.3977655}, {"prompt": 104018, "ttft": 0.27475219999999995}, {"prompt": 105340, "ttft": 0.4992535}, {"prompt": 106902, "ttft": 0.49102690000000004}, {"prompt": 107239, "ttft": 0.2739455}, {"prompt": 108203, "ttft": 0.3806832}, {"prompt": 110829, "ttft": 0.7506598999999999}, {"prompt": 111218, "ttft": 0.2805045}, {"prompt": 114572, "ttft": 0.7669057}, {"prompt": 117404, "ttft": 0.2720654}, {"prompt": 118039, "ttft": 0.2811925}, {"prompt": 118547, "ttft": 0.2712313}, {"prompt": 119011, "ttft": 0.2876113}, {"prompt": 119786, "ttft": 0.3138118}, {"prompt": 120645, "ttft": 0.30633330000000003}, {"prompt": 121307, "ttft": 0.47051889999999996}, {"prompt": 122750, "ttft": 0.42230879999999993}, {"prompt": 123353, "ttft": 0.4169777}, {"prompt": 123931, "ttft": 0.4128495}, {"prompt": 124489, "ttft": 0.3464725}, {"prompt": 125035, "ttft": 0.33655880000000005}, {"prompt": 125837, "ttft": 0.2981176}, {"prompt": 128652, "ttft": 0.6784873}, {"prompt": 130353, "ttft": 0.46592310000000003}, {"prompt": 132335, "ttft": 0.8341544999999999}, {"prompt": 134077, "ttft": 0.6030314}, {"prompt": 138319, "ttft": 0.8989107}, {"prompt": 141385, "ttft": 1.0774861}, {"prompt": 145733, "ttft": 1.0756203}, {"prompt": 151792, "ttft": 0.6271024000000001}, {"prompt": 152767, "ttft": 0.37205869999999996}, {"prompt": 153113, "ttft": 0.3572577}, {"prompt": 153997, "ttft": 0.3595992}, {"prompt": 154381, "ttft": 0.5794847}, {"prompt": 156174, "ttft": 0.3666825}, {"prompt": 156808, "ttft": 0.5077528}, {"prompt": 157314, "ttft": 0.4815661}, {"prompt": 157660, "ttft": 0.36851919999999994}, {"prompt": 159930, "ttft": 0.8455548}, {"prompt": 162036, "ttft": 0.3767283}, {"prompt": 166193, "ttft": 2.0230939}, {"prompt": 166662, "ttft": 0.3871548}, {"prompt": 167096, "ttft": 0.38806609999999997}, {"prompt": 167744, "ttft": 0.5048335}, {"prompt": 169426, "ttft": 0.5512654}, {"prompt": 171824, "ttft": 0.3937249}, {"prompt": 172184, "ttft": 0.3971348}, {"prompt": 174325, "ttft": 0.5517715}, {"prompt": 174724, "ttft": 0.3582915}, {"prompt": 176310, "ttft": 0.586834}, {"prompt": 177733, "ttft": 0.42195699999999997}, {"prompt": 177958, "ttft": 0.6070072}, {"prompt": 174594, "ttft": 52.7116124}, {"prompt": 179556, "ttft": 75.1083738}, {"prompt": 181848, "ttft": 0.7538507999999999}, {"prompt": 182953, "ttft": 0.5931527000000001}, {"prompt": 186661, "ttft": 0.7637608}, {"prompt": 187633, "ttft": 0.6153773}, {"prompt": 188587, "ttft": 0.4019213}, {"prompt": 189133, "ttft": 0.43543139999999997}, {"prompt": 189402, "ttft": 0.40643260000000003}, {"prompt": 189745, "ttft": 0.6267672000000001}, {"prompt": 191742, "ttft": 0.7922194}, {"prompt": 192245, "ttft": 0.5945941}, {"prompt": 195040, "ttft": 0.43976650000000006}, {"prompt": 195292, "ttft": 0.6301915}, {"prompt": 196238, "ttft": 0.9882476999999998}, {"prompt": 197520, "ttft": 0.4221832}, {"prompt": 198446, "ttft": 0.44016430000000006}, {"prompt": 194447, "ttft": 63.8323812}, {"prompt": 199409, "ttft": 87.6692702}, {"prompt": 200491, "ttft": 0.459621}, {"prompt": 200836, "ttft": 0.450839}, {"prompt": 201345, "ttft": 0.5515462}, {"prompt": 202193, "ttft": 0.4565906}, {"prompt": 202608, "ttft": 0.4286635}, {"prompt": 202844, "ttft": 0.4521628000000001}, {"prompt": 203589, "ttft": 0.4795360999999999}, {"prompt": 204075, "ttft": 0.4582926}, {"prompt": 47208, "ttft": 6.9635652}, {"prompt": 48449, "ttft": 0.2771484}, {"prompt": 51110, "ttft": 0.2159994}, {"prompt": 51808, "ttft": 0.19275520000000002}, {"prompt": 52548, "ttft": 0.2096669}, {"prompt": 53247, "ttft": 0.216488}, {"prompt": 53908, "ttft": 0.2111577}, {"prompt": 54479, "ttft": 0.2165209}, {"prompt": 55063, "ttft": 0.20852559999999998}, {"prompt": 55644, "ttft": 0.1927936}, {"prompt": 56321, "ttft": 0.2186918}, {"prompt": 59087, "ttft": 0.2103128}, {"prompt": 59658, "ttft": 0.3480561}, {"prompt": 59883, "ttft": 0.19289830000000002}, {"prompt": 60208, "ttft": 0.23991389999999999}, {"prompt": 61289, "ttft": 0.26726990000000006}, {"prompt": 62289, "ttft": 0.2058196}, {"prompt": 63011, "ttft": 0.2010863}, {"prompt": 63885, "ttft": 0.2115727}, {"prompt": 65002, "ttft": 0.236565}, {"prompt": 65446, "ttft": 0.2290817}, {"prompt": 66050, "ttft": 0.21759990000000004}, {"prompt": 68575, "ttft": 0.4529806}, {"prompt": 69750, "ttft": 0.24244949999999998}, {"prompt": 71896, "ttft": 0.4884117}, {"prompt": 73568, "ttft": 0.42756970000000005}, {"prompt": 75074, "ttft": 0.2593827}, {"prompt": 76787, "ttft": 0.3445332}, {"prompt": 77966, "ttft": 0.32848160000000004}, {"prompt": 79151, "ttft": 0.2506245}, {"prompt": 80251, "ttft": 0.3937949}, {"prompt": 80859, "ttft": 0.26363119999999995}, {"prompt": 83016, "ttft": 0.7470467000000001}, {"prompt": 84620, "ttft": 0.36742790000000003}, {"prompt": 85615, "ttft": 0.31082459999999995}, {"prompt": 87646, "ttft": 0.4036466}, {"prompt": 88327, "ttft": 0.32447929999999997}, {"prompt": 89176, "ttft": 0.2558378}, {"prompt": 90408, "ttft": 0.36220090000000005}, {"prompt": 91429, "ttft": 0.4915613}, {"prompt": 92316, "ttft": 0.3237697}, {"prompt": 93439, "ttft": 0.3417698}, {"prompt": 95367, "ttft": 0.4683137}, {"prompt": 96450, "ttft": 0.3409462}, {"prompt": 97252, "ttft": 0.2556527}, {"prompt": 97703, "ttft": 0.24163929999999997}, {"prompt": 98080, "ttft": 0.2450079}, {"prompt": 98643, "ttft": 0.3902489}, {"prompt": 99216, "ttft": 0.23607670000000003}, {"prompt": 100348, "ttft": 0.37802579999999997}, {"prompt": 101159, "ttft": 0.3540975}, {"prompt": 102047, "ttft": 0.3864943999999999}, {"prompt": 102474, "ttft": 0.2807056}, {"prompt": 103068, "ttft": 0.2888843}, {"prompt": 103520, "ttft": 0.2616486}, {"prompt": 103934, "ttft": 0.5064096}, {"prompt": 104364, "ttft": 0.27152220000000005}, {"prompt": 105920, "ttft": 0.7120708}, {"prompt": 106373, "ttft": 0.2635942}, {"prompt": 106914, "ttft": 0.3653279}, {"prompt": 107633, "ttft": 0.28449899999999995}, {"prompt": 109194, "ttft": 0.412765}, {"prompt": 110510, "ttft": 0.3974128}, {"prompt": 111136, "ttft": 0.281411}, {"prompt": 111338, "ttft": 0.26568990000000003}, {"prompt": 111832, "ttft": 0.44213230000000003}, {"prompt": 112407, "ttft": 0.4026221}, {"prompt": 113291, "ttft": 0.38184149999999994}, {"prompt": 114044, "ttft": 0.29733849999999995}, {"prompt": 114479, "ttft": 0.27923790000000004}, {"prompt": 115287, "ttft": 0.29266230000000004}, {"prompt": 115691, "ttft": 0.29401750000000004}, {"prompt": 116039, "ttft": 0.2805189}, {"prompt": 117880, "ttft": 0.3014606}, {"prompt": 119085, "ttft": 0.28999389999999997}, {"prompt": 121043, "ttft": 0.30510760000000003}, {"prompt": 121574, "ttft": 0.29250529999999997}, {"prompt": 123145, "ttft": 0.2989544}, {"prompt": 123720, "ttft": 0.2969718}, {"prompt": 124228, "ttft": 0.30026739999999996}, {"prompt": 125080, "ttft": 0.2907272}, {"prompt": 125830, "ttft": 0.3122074}, {"prompt": 126552, "ttft": 0.3008733}, {"prompt": 127394, "ttft": 0.4462043}, {"prompt": 128083, "ttft": 0.3124680000000001}, {"prompt": 129288, "ttft": 0.30261669999999996}, {"prompt": 129756, "ttft": 0.31326010000000004}, {"prompt": 131617, "ttft": 0.596473}, {"prompt": 133136, "ttft": 0.3400725}, {"prompt": 134228, "ttft": 0.46588759999999996}, {"prompt": 136325, "ttft": 0.8770613}, {"prompt": 137529, "ttft": 0.3503239}, {"prompt": 137859, "ttft": 0.31574050000000004}, {"prompt": 138317, "ttft": 0.3257309}, {"prompt": 139060, "ttft": 0.504376}, {"prompt": 139526, "ttft": 0.3308218}, {"prompt": 140245, "ttft": 0.5387843}, {"prompt": 140927, "ttft": 0.3369915}, {"prompt": 141173, "ttft": 0.45531710000000003}, {"prompt": 142279, "ttft": 0.35902219999999996}, {"prompt": 143702, "ttft": 0.3677206}, {"prompt": 146187, "ttft": 0.7279163}, {"prompt": 147925, "ttft": 0.3766292}, {"prompt": 148788, "ttft": 0.6154868}, {"prompt": 149433, "ttft": 0.3531178}, {"prompt": 150074, "ttft": 0.5368395}, {"prompt": 149939, "ttft": 0.1122779}, {"prompt": 149939, "ttft": 28.5293058}, {"prompt": 150783, "ttft": 0.37292140000000007}, {"prompt": 151239, "ttft": 0.35162530000000003}, {"prompt": 152221, "ttft": 0.517528}, {"prompt": 152699, "ttft": 0.3797701}, {"prompt": 154141, "ttft": 0.6886125999999999}, {"prompt": 155574, "ttft": 0.5081956000000001}, {"prompt": 157882, "ttft": 0.43392129999999995}, {"prompt": 158429, "ttft": 0.3691632}, {"prompt": 159704, "ttft": 0.5231694}, {"prompt": 160744, "ttft": 0.47437950000000007}, {"prompt": 160602, "ttft": 5.785832200000001}, {"prompt": 161578, "ttft": 0.3967703}, {"prompt": 162686, "ttft": 0.5610934}, {"prompt": 163172, "ttft": 0.3925189}, {"prompt": 164398, "ttft": 0.5151215}, {"prompt": 165068, "ttft": 0.5304344}, {"prompt": 165926, "ttft": 0.5656451}, {"prompt": 166866, "ttft": 0.4220474}, {"prompt": 167537, "ttft": 0.4162481}, {"prompt": 168246, "ttft": 0.5765532}, {"prompt": 171391, "ttft": 0.5939508}]};
 
     // Tab switcher
     function switchTab(tabId) {
@@ -539,11 +550,11 @@
             else if (row.quality < 90) scoreClass = 'tag-score-med';
 
             tr.innerHTML = `
-                <td><span style="font-weight:600; color:var(--text-secondary);">${row.scenario.split(' ')[1] || row.scenario}</span></td>
+                <td><span style="font-weight:600; color:var(--text-secondary);">${row.scenario}</span></td>
                 <td><strong>${row.profile}</strong></td>
                 <td><span class="tag ${famClass}">${row.family}</span></td>
                 <td>T=${row.temp} / Pen=${row.penalty} / B=${row.budget}</td>
-                <td><span class="${scoreClass}">${row.quality}/100</span></td>
+                <td><span class="${scoreClass}">${row.quality}%</span></td>
                 <td style="color:${row.loss < 50 ? 'var(--accent-cyan)' : (row.loss < 100 ? 'var(--text-primary)' : 'var(--accent-rose)')};"><strong>${row.loss}</strong></td>
                 <td>${row.wallclock}s</td>
                 <td>${row.ttft}s</td>
@@ -563,7 +574,111 @@
             margin: { l: 50, r: 40, t: 40, b: 40 },
         };
 
-        // 1. Parallel Coordinates Plot
+        // --- TAB 1: 200K CONTEXT DRIFT PLOTS ---
+
+        // 1. 200k Throughput & TTFT Bar Chart
+        Plotly.newPlot('plot-200k-throughput', [
+            {
+                name: 'Decode Speed (tok/s)',
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift15-MTP', 'Swift10-MTP', 'Base-NVFP4'],
+                y: [272.8, 255.2, 171.2, 168.4, 163.2],
+                marker: { color: '#00f0ff' }
+            },
+            {
+                name: 'Prefill Speed (x100 tok/s)',
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift15-MTP', 'Swift10-MTP', 'Base-NVFP4'],
+                y: [38.2, 33.4, 32.1, 32.0, 33.4],
+                marker: { color: '#a855f7' }
+            }
+        ], {
+            ...darkTheme,
+            barmode: 'group',
+            xaxis: { title: 'Model Architecture', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Throughput (tok/s)', gridcolor: 'rgba(255,255,255,0.05)' },
+            legend: { orientation: 'h', y: 1.1 }
+        }, { responsive: true });
+
+        // 2. 20-Turn TTFT & Cumulative Context Line
+        const turnsX = Array.from({ length: 20 }, (_, i) => `Turn ${i + 1}`);
+        Plotly.newPlot('plot-20turn-scaling', [
+            {
+                name: 'Swift15-DFlash2 TTFT (s)',
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: turnsX,
+                y: [0.91, 1.27, 1.49, 1.82, 2.03, 2.35, 2.67, 2.85, 3.11, 3.46, 3.60, 4.04, 4.49, 4.81, 5.27, 5.35, 5.75, 6.05, 6.19, 6.55],
+                line: { color: '#00f0ff', width: 3 },
+                marker: { size: 7 }
+            },
+            {
+                name: 'Swift15-MTP TTFT (s)',
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: turnsX,
+                y: [1.15, 1.57, 1.83, 2.16, 2.44, 2.70, 3.15, 3.30, 3.60, 4.07, 3.87, 4.44, 4.91, 5.14, 5.53, 5.56, 5.86, 5.95, 6.76, 7.08],
+                line: { color: '#a855f7', width: 2, dash: 'dot' },
+                marker: { size: 6 }
+            }
+        ], {
+            ...darkTheme,
+            xaxis: { title: 'Conversational Turn (Scaling to ~202,000 Tokens)', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Turn TTFT (seconds)', gridcolor: 'rgba(255,255,255,0.05)' },
+            legend: { orientation: 'h', y: 1.1 }
+        }, { responsive: true });
+
+        // 3. Instruction Decay & Leaks by Turn
+        Plotly.newPlot('plot-instruction-decay', [
+            {
+                name: 'Swift 1.5 DFlash-2',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 1, 0, 0, 0, 0, 0],
+                marker: { color: '#00f0ff' }
+            },
+            {
+                name: 'Swift 1.5 MTP',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 1, 0, 0, 1, 1, 0],
+                marker: { color: '#a855f7' }
+            },
+            {
+                name: 'Swift 1.0 MTP',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 0, 0, 1, 1, 0, 0],
+                marker: { color: '#f59e0b' }
+            }
+        ], {
+            ...darkTheme,
+            barmode: 'group',
+            xaxis: { title: 'Turn Horizon & Cumulative Context', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Negative Constraint Violations', gridcolor: 'rgba(255,255,255,0.05)' },
+            legend: { orientation: 'h', y: 1.1 }
+        }, { responsive: true });
+
+        // 4. Total Session Time Bar Chart
+        Plotly.newPlot('plot-session-time', [
+            {
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift10-MTP', 'Base-NVFP4', 'Swift15-MTP'],
+                y: [208.3, 233.3, 256.0, 292.9, 346.1],
+                marker: {
+                    color: ['#00f0ff', '#10b981', '#3b82f6', '#f59e0b', '#a855f7'],
+                    line: { color: '#ffffff', width: 1 }
+                },
+                text: ['208.3s (🏆 Fastest)', '233.3s', '256.0s', '292.9s', '346.1s'],
+                textposition: 'auto'
+            }
+        ], {
+            ...darkTheme,
+            xaxis: { title: 'Model Architecture', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Total 20-Turn Session Time (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }
+        }, { responsive: true });
+
+        // --- TAB 2: MULTIVARIATE SURFACE ---
         const families = [...new Set(scorecardData.map(d => d.family))];
         const parData = [{
             type: 'parcoords',
@@ -577,33 +692,29 @@
                 {
                     label: 'Model Family',
                     values: scorecardData.map(d => families.indexOf(d.family)),
-                    tickvals: [0, 1, 2],
+                    tickvals: [0, 1, 2, 3, 4],
                     ticktext: families
                 },
                 { label: 'Temperature', values: scorecardData.map(d => d.temp), range: [0.55, 0.95] },
                 { label: 'Presence Penalty', values: scorecardData.map(d => d.penalty), range: [-0.01, 0.12] },
                 { label: 'Thinking Budget', values: scorecardData.map(d => d.budget), range: [1000, 4500] },
-                { label: 'Quality Score', values: scorecardData.map(d => d.quality), range: [40, 105] },
-                { label: 'Wallclock (s)', values: scorecardData.map(d => d.wallclock), range: [0, 40] },
-                { label: 'Optimization Loss', values: scorecardData.map(d => d.loss), range: [0, 240] }
+                { label: 'Quality Score (%)', values: scorecardData.map(d => d.quality), range: [40, 105] },
+                { label: 'Wallclock (s)', values: scorecardData.map(d => d.wallclock), range: [0, 350] }
             ]
         }];
         Plotly.newPlot('plot-parcoords', parData, { ...darkTheme, margin: { l: 80, r: 80, t: 40, b: 40 } }, { responsive: true });
 
         // 2. Loss Heatmap
-        const temps = [0.60, 0.65, 0.70, 0.90];
-        const budgets = [1200, 1600, 2048, 4096];
-        const zGrid = [
-            [42.6, 55.0, 75.0, 96.4],
-            [36.7, 46.4, 60.0, 85.0],
-            [45.0, 62.0, 77.8, 98.5],
-            [70.0, 87.2, 110.0, 130.0]
-        ];
         Plotly.newPlot('plot-heatmap', [{
             type: 'contour',
-            z: zGrid,
-            x: budgets,
-            y: temps,
+            z: [
+                [42.6, 55.0, 75.0, 96.4],
+                [36.7, 46.4, 60.0, 85.0],
+                [45.0, 62.0, 77.8, 98.5],
+                [70.0, 87.2, 110.0, 130.0]
+            ],
+            x: [1200, 1600, 2048, 4096],
+            y: [0.60, 0.65, 0.70, 0.90],
             colorscale: 'Viridis',
             reversescale: true,
             contours: { coloring: 'heatmap', showlabels: true },
@@ -618,8 +729,8 @@
         Plotly.newPlot('plot-radar', [
             {
                 type: 'scatterpolar',
-                r: [98, 100, 85, 96, 95, 95],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [98, 100, 95, 96, 95, 95],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Swift15-DFlash2',
                 line: { color: '#00f0ff', width: 2 },
@@ -627,8 +738,8 @@
             },
             {
                 type: 'scatterpolar',
-                r: [95, 95, 80, 88, 90, 88],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [95, 95, 90, 88, 90, 88],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Base-DFlash2',
                 line: { color: '#10b981', width: 2 },
@@ -636,53 +747,33 @@
             },
             {
                 type: 'scatterpolar',
-                r: [92, 85, 75, 70, 82, 80],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
-                fill: 'toself',
-                name: 'Swift15-MTP',
-                line: { color: '#f59e0b', width: 2 },
-                fillcolor: 'rgba(245, 158, 11, 0.15)'
-            },
-            {
-                type: 'scatterpolar',
-                r: [90, 75, 70, 65, 80, 75],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [92, 85, 80, 70, 82, 80],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Swift10-MTP',
-                line: { color: '#a855f7', width: 2 },
-                fillcolor: 'rgba(168, 85, 247, 0.15)'
-            },
-            {
-                type: 'scatterpolar',
-                r: [88, 70, 65, 62, 75, 70],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
-                fill: 'toself',
-                name: 'Base-NVFP4 (MTP)',
-                line: { color: '#ec4899', width: 2 },
-                fillcolor: 'rgba(236, 72, 153, 0.15)'
+                line: { color: '#a855f7', width: 1.5 },
+                fillcolor: 'rgba(168, 85, 247, 0.1)'
             }
         ], {
             ...darkTheme,
             polar: {
-                radialaxis: { visible: true, range: [0, 100], color: '#64748b', gridcolor: 'rgba(255,255,255,0.08)' },
-                angularaxis: { color: '#94a3b8', gridcolor: 'rgba(255,255,255,0.08)' },
-                bgcolor: 'rgba(0,0,0,0)'
+                radialaxis: { visible: true, range: [0, 100], gridcolor: 'rgba(255,255,255,0.05)' },
+                angularaxis: { gridcolor: 'rgba(255,255,255,0.05)' }
             },
-            showlegend: true,
-            legend: { orientation: 'h', y: -0.15 }
+            legend: { orientation: 'h', y: 1.15 }
         }, { responsive: true });
 
-        // 4. DFlash-2 Position Decay
-        const posRates = dflash2Data.position_rates || [];
+        // --- TAB 3: DFLASH-2 TELEMETRY ---
+        const dDecay = dflash2Data.position_decay || [];
         Plotly.newPlot('plot-dflash-decay', [{
             type: 'bar',
-            x: posRates.map(p => p.position),
-            y: posRates.map(p => p.rate),
+            x: dDecay.map(d => `Draft Pos ${d.position}`),
+            y: dDecay.map(d => d.rate),
             marker: {
-                color: posRates.map((p, i) => `rgba(0, 240, 255, ${1 - i * 0.12})`),
-                line: { color: '#00f0ff', width: 1.5 }
+                color: dDecay.map(d => `rgba(0, 240, 255, ${d.rate / 100})`),
+                line: { color: '#00f0ff', width: 1 }
             },
-            text: posRates.map(p => `${p.rate}%`),
+            text: dDecay.map(d => `${d.rate}%`),
             textposition: 'auto'
         }], {
             ...darkTheme,
@@ -690,57 +781,36 @@
             yaxis: { title: 'Acceptance Rate (%)', range: [0, 100], gridcolor: 'rgba(255,255,255,0.05)' }
         }, { responsive: true });
 
-        // 5. DFlash-2 Context Scaling
-        const bSummary = dflash2Data.bucket_summary || [];
-        Plotly.newPlot('plot-dflash-context', [
-            {
-                type: 'bar',
-                name: 'Acceptance Rate (%)',
-                x: bSummary.map(b => b.bucket),
-                y: bSummary.map(b => b.rate),
-                marker: { color: '#10b981' },
-                yaxis: 'y'
-            },
-            {
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'Decode Speed (tok/s)',
-                x: bSummary.map(b => b.bucket),
-                y: bSummary.map(b => b.avg_speed),
-                marker: { color: '#00f0ff', size: 8 },
-                line: { color: '#00f0ff', width: 2 },
-                yaxis: 'y2'
-            }
-        ], {
+        const dContext = dflash2Data.context_curve || [];
+        Plotly.newPlot('plot-dflash-context', [{
+            type: 'scatter',
+            mode: 'lines+markers',
+            x: dContext.map(d => d.bucket),
+            y: dContext.map(d => d.rate),
+            line: { color: '#10b981', width: 3 },
+            marker: { size: 8, color: '#00f0ff' }
+        }], {
             ...darkTheme,
-            xaxis: { title: 'Prompt Context Length', gridcolor: 'rgba(255,255,255,0.05)' },
-            yaxis: { title: 'Acceptance (%)', range: [0, 80], gridcolor: 'rgba(255,255,255,0.05)' },
-            yaxis2: { title: 'Decode Speed (tok/s)', overlaying: 'y', side: 'right', range: [100, 380], font: { color: '#00f0ff' } },
-            legend: { orientation: 'h', y: 1.15 }
+            xaxis: { title: 'Context Window Bucket (Tokens)', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Speculative Acceptance (%)', range: [40, 80], gridcolor: 'rgba(255,255,255,0.05)' }
         }, { responsive: true });
 
-        // 6. TTFT Scaling
         const ttftPts = dflash2Data.ttft_points || [];
         Plotly.newPlot('plot-ttft-scaling', [{
             type: 'scatter',
             mode: 'markers',
-            x: ttftPts.map(p => p.prompt),
-            y: ttftPts.map(p => p.ttft),
-            marker: {
-                color: '#3b82f6',
-                size: 6,
-                opacity: 0.6
-            }
+            x: ttftPts.map(d => d.prompt),
+            y: ttftPts.map(d => d.ttft),
+            marker: { color: '#a855f7', size: 6, opacity: 0.7 }
         }], {
             ...darkTheme,
             xaxis: { title: 'Prompt Tokens', gridcolor: 'rgba(255,255,255,0.05)' },
-            yaxis: { title: 'TTFT (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }
+            yaxis: { title: 'Time to First Token (TTFT, s)', gridcolor: 'rgba(255,255,255,0.05)' }
         }, { responsive: true });
 
-        // 7. Speed Histogram
         Plotly.newPlot('plot-speed-hist', [{
             type: 'histogram',
-            x: [210, 240, 260, 275, 290, 310, 325, 335, 345, 350, 355, 360, 365, 370],
+            x: dflash2Data.decode_speeds && dflash2Data.decode_speeds.length > 0 ? dflash2Data.decode_speeds : [210, 240, 260, 275, 290, 310, 325, 335, 345, 350, 355, 360, 365, 370],
             marker: { color: 'rgba(0, 240, 255, 0.7)', line: { color: '#00f0ff', width: 1 } }
         }], {
             ...darkTheme,
@@ -748,7 +818,7 @@
             yaxis: { title: 'Frequency', gridcolor: 'rgba(255,255,255,0.05)' }
         }, { responsive: true });
 
-        // 8. Pareto Frontier Plot
+        // --- TAB 4: PARETO FRONTIER ---
         const sc1 = scorecardData.filter(d => d.scenario.includes('1'));
         const sc2 = scorecardData.filter(d => d.scenario.includes('2'));
         const sc3 = scorecardData.filter(d => d.scenario.includes('3'));
@@ -785,7 +855,7 @@
             {
                 type: 'scatter',
                 mode: 'markers',
-                name: 'Scenario 3 (Long-Horizon)',
+                name: 'Scenario 3 (15-Turn Synth)',
                 x: sc3.map(d => d.wallclock),
                 y: sc3.map(d => d.quality),
                 text: sc3.map(d => `${d.config}<br>Loss: ${d.loss}<br>Thinking: ${d.thinking} tok`),
@@ -799,7 +869,7 @@
         ], {
             ...darkTheme,
             xaxis: { title: 'Wallclock Duration (seconds)', gridcolor: 'rgba(255,255,255,0.05)' },
-            yaxis: { title: 'Quality Score (0 - 100)', range: [40, 105], gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Quality Score (%)', range: [40, 105], gridcolor: 'rgba(255,255,255,0.05)' },
             showlegend: true,
             legend: { orientation: 'h', y: 1.1 }
         }, { responsive: true });

@@ -156,9 +156,13 @@ $argsList = @(
     "--min-p", $MinP,
     "--presence-penalty", $PresencePenalty,
     "--default-thinking-budget", $ThinkingBudget,
-    "--cors",
-    "--webui"
+    "--cors"
 )
+
+$webuiDir = Join-Path $ScriptDir "models\webui"
+if (Test-Path $webuiDir) {
+    $argsList += @("--webui-dir", $webuiDir)
+}
 
 if ($PreserveThinking) {
     $argsList += "--preserve-thinking"

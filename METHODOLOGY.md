@@ -140,5 +140,28 @@ To guarantee reproducibility, all evaluations were conducted against exact model
 
 ---
 
-## 6. Conclusion
-By evaluating local agentic inference across multi-turn execution and objective loss surfaces, this methodology identifies bounded hyperparameter regimes ($T=0.65, \lambda_{\text{pres}}=0.05, B_{\text{think}}=1200$) that eliminate reasoning loops, prevent speculative hallucinations, and sustain 250–370+ tok/s generation throughput with DFlash-2 across multi-turn developer sessions.
+## 6. 200,000-Token Long-Context & Multi-Turn Drift Dynamics
+
+To test the outer boundaries of local inference on the RTX 5090 (240k context with `k8v4` KV cache), we extended the methodology across two dedicated stress tests:
+
+### 6.1 Single-Pass 200k Multi-Needle in a Haystack (M-NIAH)
+* **Corpus Scale:** 217,088 tokens of high-entropy multi-crate Rust code.
+* **Sentinel Depths:** 5 precision needles injected at 10%, 30%, 50% ("Lost in the Middle"), 75%, and 92% (deep RoPE tail).
+* **Interlocking Multi-Hop Chain:** 3-stage causal formula: `(GLOBAL_CAPACITY_BASE * TIER_MULTIPLIER) / EFFECTIVE_DIVISOR + BUFFER_HEADROOM`.
+* **Empirical Finding:** All 5 model architectures achieved **100/100 perfect retrieval and calculation accuracy (5450)**. No attention dispersion or KV-cache quantization degradation was observed across the 217k boundary.
+* **Throughput:** DFlash-2 sustained **272.8 tok/s** generation speed with a **56.1%** draft acceptance rate at 217k context.
+
+### 6.2 20-Turn 200,000-Token Progressive Multi-Turn Drift
+* **Session Structure:** 20 sequential turns (~10,000 tokens added per turn to 202,913 cumulative tokens).
+* **Dynamic State Overrides:** State $v1$ (Turn 2 @ 20k) $\to$ State $v2$ (Turn 7 @ 70k) $\to$ State $v3$ (Turn 13 @ 130k).
+* **Distractor Density:** 30 lookalike proxy structs scattered across turns.
+* **Negative Constraints:** Mandatory `RULE_NO_UNWRAP` and `RULE_STRICT_JSON` checked turn-by-turn.
+* **Findings:**
+  1. **Temporal State Tracking (100%):** All models correctly resolved active State $v3$ (`16384` $\to$ `3001`) at Turn 20, avoiding stale $v1$ and $v2$ traps.
+  2. **Instruction Decay ($>150\text{k}$ tokens):** Negative constraint violations emerged in late turns (Turns 15–19), where models began leaking `.unwrap()` into generated code. `Swift15-DFlash2` demonstrated the highest instruction stability (only 1 leak across 20 turns).
+  3. **Prefix Caching:** NInfer sustained **~94.9% cache hit rate**, keeping per-turn TTFT under 6.55s and completing the 20-turn session in **208.3s**.
+
+---
+
+## 7. Conclusion
+By evaluating local agentic inference across multi-turn execution, 200k-token scale, and objective loss surfaces, this methodology identifies bounded hyperparameter regimes ($T=0.65, \lambda_{\text{pres}}=0.05, B_{\text{think}}=1200$) that eliminate reasoning loops, prevent speculative hallucinations, and sustain 250–370+ tok/s generation throughput with DFlash-2 across 200,000-token developer sessions.

@@ -178,9 +178,13 @@ $argsList = @(
     "--presence-penalty", $PresencePenalty,
     "--default-thinking-budget", $ThinkingBudget,
     "--host-kv-mib", $HostKvMib,
-    "--cors",
-    "--webui"
+    "--cors"
 )
+
+$webuiDir = Join-Path $ScriptDir "models\webui"
+if (Test-Path $webuiDir) {
+    $argsList += @("--webui-dir", $webuiDir)
+}
 
 if ($Spec -and $Spec -ne "none") {
     $argsList += @("--spec", $Spec)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NInfer Multivariate Benchmark & DFlash-2 Deep Dive Dashboard Generator
+NInfer Multivariate Benchmark & 200K Context Drift Dashboard Generator
 Parses SCORECARD.md, bench_reports/*.md, and requests.jsonl to produce a
 standalone interactive HTML visualization dashboard with Plotly.js.
 """
@@ -44,6 +44,10 @@ def parse_scorecard():
                 scenario = "Scenario 2 (Phantom IK Trap)"
             elif "[combiner_mech]" in config_raw:
                 scenario = "Scenario 3 (Combiner Mech 15-Turn)"
+            elif "[context_drift_200k]" in config_raw:
+                scenario = "Scenario 4 (200k Context Drift M-NIAH)"
+            elif "[multiturn_drift_200k]" in config_raw:
+                scenario = "Scenario 5 (200k 20-Turn Progressive Drift)"
 
             config_clean = re.sub(r"\[.*?\]\s*", "", config_raw).replace("**", "")
 
@@ -62,7 +66,8 @@ def parse_scorecard():
             if "/" in quality_str and not quality_str.startswith("0/"):
                 # Format: Date | Config | Model | Quality | Loss | Turns | Time | TTFT | Thinking | Cap | Loops | Report
                 try:
-                    quality = float(quality_str.split("/")[0])
+                    num, denom = quality_str.split("/")
+                    quality = (float(num) / float(denom)) * 100.0 if float(denom) > 0 else 100.0
                 except Exception:
                     quality = 100.0
                 try:
@@ -91,7 +96,6 @@ def parse_scorecard():
                 except Exception:
                     loops = 0
             else:
-                # Format without explicit quality/loss columns (early baseline runs)
                 try:
                     turns = int(parts[3])
                 except Exception:
@@ -149,23 +153,8 @@ def parse_scorecard():
             elif any(k in config_clean for k in ["1.5", "2.5", "3.5", "4.5", "5.5"]):
                 temp, min_p, penalty, budget = 0.60, 0.05, 0.08, 1600
                 iter_name = "Tuned Local Minima"
-            elif "1.6" in config_clean:
-                temp, min_p, penalty, budget = 0.65, 0.05, 0.05, 1200
-                iter_name = "Draft-3 Window"
-            elif "1.7" in config_clean:
-                temp, min_p, penalty, budget = 0.65, 0.05, 0.05, 1200
-                iter_name = "Draft-5 Window"
-            elif "1.8" in config_clean:
-                temp, min_p, penalty, budget = 0.65, 0.05, 0.05, 1200
-                iter_name = "Draft-9 Window"
-            elif "1.9" in config_clean:
-                temp, min_p, penalty, budget = 0.65, 0.05, 0.05, 1200
-                iter_name = "Prefill Chunk 2048"
-            elif "1.10" in config_clean:
-                temp, min_p, penalty, budget = 0.65, 0.05, 0.05, 1200
-                iter_name = "Prefill Chunk 8192"
             else:
-                iter_name = config_clean
+                iter_name = config_clean.split("_")[-1] if "_" in config_clean else config_clean
 
             rows.append({
                 "datetime": dt,
@@ -178,7 +167,7 @@ def parse_scorecard():
                 "min_p": min_p,
                 "penalty": penalty,
                 "budget": budget,
-                "quality": quality,
+                "quality": round(quality, 1),
                 "loss": round(loss, 1),
                 "turns": turns,
                 "wallclock": wallclock,
@@ -202,11 +191,11 @@ def parse_requests_dflash2():
         "4k - 16k": {"drafted": 0, "accepted": 0, "reqs": 0, "ttft": [], "speed": []},
         "16k - 32k": {"drafted": 0, "accepted": 0, "reqs": 0, "ttft": [], "speed": []},
         "32k - 64k": {"drafted": 0, "accepted": 0, "reqs": 0, "ttft": [], "speed": []},
+        "64k - 240k": {"drafted": 0, "accepted": 0, "reqs": 0, "ttft": [], "speed": []},
     }
 
     ttft_points = []
     decode_speeds = []
-    thinking_points = []
     total_dflash2_requests = 0
 
     with open(REQUESTS_FILE, "r", encoding="utf-8", errors="replace") as f:
@@ -224,9 +213,6 @@ def parse_requests_dflash2():
                 total_dflash2_requests += 1
                 accepted_pos = spec.get("accepted_per_position", [])
                 rounds = spec.get("rounds", 0)
-                draft_window = spec.get("draft_window", 7)
-                drafted = spec.get("drafted_tokens", 0)
-                accepted = spec.get("accepted_tokens", 0)
 
                 for i, acc in enumerate(accepted_pos):
                     pos_accepted[i + 1] += acc
@@ -236,71 +222,64 @@ def parse_requests_dflash2():
                 timings = d.get("timings_seconds", {})
                 prompt_tok = res.get("prompt_tokens", 0) or 0
                 comp_tok = res.get("completion_tokens", 0) or 0
-                th_tok = res.get("model_thinking_tokens", 0) or 0
                 ttft = timings.get("ttft", 0.0) or 0.0
                 decode_sec = timings.get("decode", 0.0) or 0.0
 
-                if decode_sec > 0.01 and comp_tok > 0:
-                    speed = comp_tok / decode_sec
+                speed = (comp_tok / decode_sec) if (decode_sec > 0.01 and comp_tok > 0) else 0.0
+                if speed > 0:
                     decode_speeds.append(speed)
-                else:
-                    speed = 0.0
 
                 if ttft > 0:
                     ttft_points.append({"prompt": prompt_tok, "ttft": ttft})
-                if th_tok > 0:
-                    thinking_points.append(th_tok)
 
-                # Context bucket
-                if prompt_tok <= 4000:
-                    bkey = "0 - 4k"
-                elif prompt_tok <= 16000:
-                    bkey = "4k - 16k"
-                elif prompt_tok <= 32000:
-                    bkey = "16k - 32k"
+                if prompt_tok < 4000:
+                    b = context_buckets["0 - 4k"]
+                elif prompt_tok < 16000:
+                    b = context_buckets["4k - 16k"]
+                elif prompt_tok < 32000:
+                    b = context_buckets["16k - 32k"]
+                elif prompt_tok < 64000:
+                    b = context_buckets["32k - 64k"]
                 else:
-                    bkey = "32k - 64k"
+                    b = context_buckets["64k - 240k"]
 
-                context_buckets[bkey]["drafted"] += drafted
-                context_buckets[bkey]["accepted"] += accepted
-                context_buckets[bkey]["reqs"] += 1
+                b["reqs"] += 1
+                b["drafted"] += spec.get("drafted_tokens", 0)
+                b["accepted"] += spec.get("accepted_tokens", 0)
                 if ttft > 0:
-                    context_buckets[bkey]["ttft"].append(ttft)
+                    b["ttft"].append(ttft)
                 if speed > 0:
-                    context_buckets[bkey]["speed"].append(speed)
+                    b["speed"].append(speed)
 
             except Exception:
                 continue
 
-    # Compute position acceptance rates
-    position_rates = []
+    position_decay = []
     for pos in range(1, 8):
         dr = pos_drafted.get(pos, 0)
-        acc = pos_accepted.get(pos, 0)
-        rate = (acc / dr * 100.0) if dr > 0 else 0.0
-        position_rates.append({"position": f"Draft {pos}", "rate": round(rate, 1), "accepted": acc, "drafted": dr})
+        ac = pos_accepted.get(pos, 0)
+        rate = (ac / dr * 100.0) if dr > 0 else 0.0
+        position_decay.append({"position": pos, "drafted": dr, "accepted": ac, "rate": round(rate, 2)})
 
-    # Compute bucket rates
-    bucket_summary = []
-    for bkey, bdata in context_buckets.items():
-        rate = (bdata["accepted"] / bdata["drafted"] * 100.0) if bdata["drafted"] > 0 else 0.0
-        avg_ttft = sum(bdata["ttft"]) / len(bdata["ttft"]) if bdata["ttft"] else 0.0
-        avg_spd = sum(bdata["speed"]) / len(bdata["speed"]) if bdata["speed"] else 0.0
-        bucket_summary.append({
-            "bucket": bkey,
-            "rate": round(rate, 1),
-            "reqs": bdata["reqs"],
+    context_curve = []
+    for k, v in context_buckets.items():
+        rate = (v["accepted"] / v["drafted"] * 100.0) if v["drafted"] > 0 else 0.0
+        avg_ttft = (sum(v["ttft"]) / len(v["ttft"])) if v["ttft"] else 0.0
+        avg_speed = (sum(v["speed"]) / len(v["speed"])) if v["speed"] else 0.0
+        context_curve.append({
+            "bucket": k,
+            "reqs": v["reqs"],
+            "rate": round(rate, 2),
             "avg_ttft": round(avg_ttft, 3),
-            "avg_speed": round(avg_spd, 1),
+            "avg_speed": round(avg_speed, 1),
         })
 
     return {
         "total_requests": total_dflash2_requests,
-        "position_rates": position_rates,
-        "bucket_summary": bucket_summary,
-        "ttft_points": ttft_points[:300],  # Sample for chart
-        "avg_decode_speed": round(sum(decode_speeds) / len(decode_speeds), 1) if decode_speeds else 0.0,
-        "max_decode_speed": round(max(decode_speeds), 1) if decode_speeds else 0.0,
+        "position_decay": position_decay,
+        "context_curve": context_curve,
+        "decode_speeds": decode_speeds[:300],
+        "ttft_points": ttft_points[:300],
     }
 
 
@@ -309,76 +288,73 @@ def generate_html(scorecard_data, dflash2_data):
     json_dflash2 = json.dumps(dflash2_data)
 
     html_template = f"""<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NInfer Multivariate Agentic Benchmark & DFlash-2 Telemetry Dashboard</title>
-    <!-- Fonts -->
+    <title>NInfer Multivariate Optimization & 200K Long-Context Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Plotly.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
     <style>
         :root {{
-            --bg-base: #0a0d14;
-            --bg-surface: #101522;
-            --bg-card: rgba(18, 24, 38, 0.75);
-            --bg-card-hover: rgba(26, 34, 54, 0.85);
+            --bg-primary: #0a0d14;
+            --bg-secondary: #0f131d;
+            --bg-card: rgba(17, 22, 34, 0.75);
             --border-subtle: rgba(255, 255, 255, 0.08);
             --border-glow: rgba(0, 240, 255, 0.25);
-            --text-primary: #f1f5f9;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --accent-cyan: #00f0ff;
-            --accent-blue: #3b82f6;
-            --accent-purple: #a855f7;
-            --accent-amber: #f59e0b;
-            --accent-emerald: #10b981;
-            --accent-rose: #f43f5e;
-            --gradient-champion: linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%);
-            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
         }}
 
         * {{
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }}
 
         body {{
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-base);
+            background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             padding: 24px;
+            overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%);
-            background-attachment: fixed;
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 40%);
         }}
 
         .dashboard-container {{
-            max-width: 1600px;
+            max-width: 1720px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 24px;
         }}
 
         /* Header */
         header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px;
             background: var(--bg-card);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
+            padding: 24px 32px;
             box-shadow: var(--shadow-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }}
 
         .brand-title {{
@@ -386,7 +362,7 @@ def generate_html(scorecard_data, dflash2_data):
             font-size: 26px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            background: var(--gradient-champion);
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #00f0ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -398,25 +374,29 @@ def generate_html(scorecard_data, dflash2_data):
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.4);
             color: var(--accent-emerald);
-            font-size: 12px;
-            font-weight: 600;
             padding: 4px 10px;
-            border-radius: 20px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }}
 
         .header-meta {{
+            display: flex;
+            gap: 20px;
             font-size: 13px;
             color: var(--text-secondary);
-            text-align: right;
-            line-height: 1.5;
         }}
 
-        /* KPI Grid */
+        .header-meta strong {{
+            color: var(--text-primary);
+        }}
+
+        /* Top KPI Grid */
         .kpi-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
         }}
 
@@ -425,78 +405,63 @@ def generate_html(scorecard_data, dflash2_data):
             backdrop-filter: blur(12px);
             border: 1px solid var(--border-subtle);
             border-radius: 16px;
-            padding: 20px 24px;
+            padding: 20px;
+            box-shadow: var(--shadow-glass);
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.25s ease;
+            gap: 6px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }}
 
         .kpi-card:hover {{
             transform: translateY(-2px);
             border-color: var(--border-glow);
-            box-shadow: 0 12px 24px rgba(0, 240, 255, 0.08);
-        }}
-
-        .kpi-card::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--gradient-champion);
-            opacity: 0.7;
         }}
 
         .kpi-label {{
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: var(--text-muted);
         }}
 
         .kpi-value {{
             font-family: 'Outfit', sans-serif;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            color: var(--text-primary);
         }}
 
         .kpi-sub {{
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }}
 
-        /* Tabs */
+        /* Navigation Tabs */
         .nav-tabs {{
             display: flex;
-            gap: 8px;
-            background: var(--bg-surface);
-            padding: 6px;
-            border-radius: 14px;
-            border: 1px solid var(--border-subtle);
-            width: fit-content;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+            overflow-x: auto;
         }}
 
         .tab-btn {{
             background: transparent;
-            border: none;
+            border: 1px solid transparent;
             color: var(--text-secondary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
             font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 10px 18px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: inherit;
+            white-space: nowrap;
         }}
 
         .tab-btn.active {{
-            background: rgba(0, 240, 255, 0.12);
+            background: rgba(0, 240, 255, 0.1);
             color: var(--accent-cyan);
             border: 1px solid rgba(0, 240, 255, 0.3);
             box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1);
@@ -570,7 +535,7 @@ def generate_html(scorecard_data, dflash2_data):
             height: 560px;
         }}
 
-        /* Scorecard Table */
+        /* Tables */
         .table-responsive {{
             overflow-x: auto;
             border-radius: 12px;
@@ -598,22 +563,20 @@ def generate_html(scorecard_data, dflash2_data):
         td {{
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            color: var(--text-primary);
-            font-family: 'Fira Code', monospace;
-            font-size: 12px;
+            color: var(--text-secondary);
         }}
 
         tr:hover td {{
             background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
         }}
 
         .tag {{
-            display: inline-block;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'JetBrains Mono', monospace;
         }}
 
         .tag-dflash {{
@@ -626,19 +589,6 @@ def generate_html(scorecard_data, dflash2_data):
             background: rgba(168, 85, 247, 0.15);
             color: var(--accent-purple);
             border: 1px solid rgba(168, 85, 247, 0.3);
-        }}
-
-        .tag-score-100 {{
-            color: var(--accent-emerald);
-            font-weight: 700;
-        }}
-
-        .tag-score-med {{
-            color: var(--accent-amber);
-        }}
-
-        .tag-score-low {{
-            color: var(--accent-rose);
         }}
 
         .champion-badge {{
@@ -662,54 +612,94 @@ def generate_html(scorecard_data, dflash2_data):
     <header>
         <div>
             <div class="brand-title">
-                <span>NInfer Multivariate Optimization Studio</span>
+                <span>NInfer Multivariate Optimization & 200K Scale Studio</span>
                 <span class="badge-live">RTX 5090 • NVFP4</span>
             </div>
             <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                Empirical 45-run multi-scenario sweep & DFlash-2 speculative telemetry analysis
+                Empirical multi-scenario suite, 200k context drift & DFlash-2 speculative telemetry
             </div>
         </div>
         <div class="header-meta">
             <div><strong>Engine:</strong> NInfer (CUDA 13.1 / SM 12.0)</div>
             <div><strong>Model:</strong> Qwen 3.8 27B NVFP4 (Swift 1.5)</div>
-            <div><strong>Champion:</strong> Config-1.4 (Tight Agentic Budget)</div>
+            <div><strong>Champion:</strong> Swift 1.5 DFlash-2 (18.0 GiB)</div>
         </div>
     </header>
 
     <!-- Top KPI Cards -->
     <div class="kpi-grid">
         <div class="kpi-card">
-            <div class="kpi-label">DFlash-2 Peak Decode</div>
-            <div class="kpi-value" style="color: var(--accent-cyan);" id="kpi-peak-speed">350+ tok/s</div>
-            <div class="kpi-sub">7 draft tokens + LM head draft</div>
+            <div class="kpi-label">200K Generation Speed</div>
+            <div class="kpi-value" style="color: var(--accent-cyan);">272.8 tok/s</div>
+            <div class="kpi-sub">Swift 1.5 DFlash-2 (7 draft tokens)</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Speculative Acceptance</div>
-            <div class="kpi-value" style="color: var(--accent-emerald);" id="kpi-acceptance">62.6%</div>
-            <div class="kpi-sub">Across 3,549 real-world DFlash-2 requests</div>
+            <div class="kpi-label">200K M-NIAH Accuracy</div>
+            <div class="kpi-value" style="color: var(--accent-emerald);">100% (5/5)</div>
+            <div class="kpi-sub">Zero retrieval drift (10% to 92% depth)</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Prefix Cache Hit Rate</div>
-            <div class="kpi-value" style="color: var(--accent-purple);">96.4%</div>
-            <div class="kpi-sub">Avg TTFT 0.15s – 0.35s under 60k context</div>
+            <div class="kpi-label">20-Turn Multi-Turn Scale</div>
+            <div class="kpi-value" style="color: var(--accent-purple);">208.3s Session</div>
+            <div class="kpi-sub">94.9% Prefix Cache reuse to 202k tokens</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Optimal Agentic Profile</div>
+            <div class="kpi-label">Optimal Daily Driver</div>
             <div class="kpi-value" style="font-size: 22px; color: var(--text-primary);">T=0.65, B=1200</div>
-            <div class="kpi-sub">98% tail-latency reduction (Config-1.4)</div>
+            <div class="kpi-sub">Swift15-DFlash2 (W8G32, 18.0 GiB)</div>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-multivariate')">1. Multivariate Optimization Surface</button>
-        <button class="tab-btn" onclick="switchTab('tab-dflash2')">2. DFlash-2 In-Depth Telemetry</button>
-        <button class="tab-btn" onclick="switchTab('tab-pareto')">3. Pareto Frontier & Trade-offs</button>
-        <button class="tab-btn" onclick="switchTab('tab-scorecard')">4. Grand 45-Run Scorecard Table</button>
+        <button class="tab-btn active" onclick="switchTab('tab-context-drift')">1. 200K Context Drift & Multi-Turn Deep Dive</button>
+        <button class="tab-btn" onclick="switchTab('tab-multivariate')">2. Multivariate Optimization Surface</button>
+        <button class="tab-btn" onclick="switchTab('tab-dflash2')">3. DFlash-2 In-Depth Telemetry</button>
+        <button class="tab-btn" onclick="switchTab('tab-pareto')">4. Pareto Frontier & Trade-offs</button>
+        <button class="tab-btn" onclick="switchTab('tab-scorecard')">5. Full Benchmark Scorecard Table</button>
     </div>
 
-    <!-- TAB 1: Multivariate Optimization Surface -->
-    <div id="tab-multivariate" class="tab-content active">
+    <!-- TAB 1: 200K Context Drift & Multi-Turn Scale -->
+    <div id="tab-context-drift" class="tab-content active">
+        <div class="chart-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">200,000-Token Single-Pass M-NIAH: Model Throughput & Latency</div>
+                    <div class="card-desc">Comparison of prefill TTFT and decode throughput under 217k token KV cache pressure.</div>
+                </div>
+                <div id="plot-200k-throughput" class="plot-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">20-Turn Multi-Turn Session: TTFT & Context Scaling Curve</div>
+                    <div class="card-desc">Shows how prefix caching maintains TTFT between 0.9s and 6.5s as context builds to 202,913 tokens.</div>
+                </div>
+                <div id="plot-20turn-scaling" class="plot-container"></div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">20-Turn Instruction Decay & Negative Constraint Violations</div>
+                    <div class="card-desc">Visualizes when negative rule leaks (e.g. .unwrap() in code) emerge as turn horizon expands.</div>
+                </div>
+                <div id="plot-instruction-decay" class="plot-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Total 20-Turn Session Turnaround Time (seconds)</div>
+                    <div class="card-desc">Cumulative elapsed time for complete 20-turn software engineering session across all models.</div>
+                </div>
+                <div id="plot-session-time" class="plot-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Multivariate Optimization Surface -->
+    <div id="tab-multivariate" class="tab-content">
         <div class="chart-grid full">
             <div class="card">
                 <div class="card-header">
@@ -742,7 +732,7 @@ def generate_html(scorecard_data, dflash2_data):
         </div>
     </div>
 
-    <!-- TAB 2: DFlash-2 Deep Dive -->
+    <!-- TAB 3: DFlash-2 Deep Dive -->
     <div id="tab-dflash2" class="tab-content">
         <div class="chart-grid">
             <div class="card">
@@ -756,7 +746,7 @@ def generate_html(scorecard_data, dflash2_data):
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">DFlash-2 Acceptance Rate vs. Context Length</div>
-                    <div class="card-desc">Shows speculative efficiency scaling from small prompts up to 64,000 token context.</div>
+                    <div class="card-desc">Shows speculative efficiency scaling from small prompts up to 240,000 token context.</div>
                 </div>
                 <div id="plot-dflash-context" class="plot-container"></div>
             </div>
@@ -781,7 +771,7 @@ def generate_html(scorecard_data, dflash2_data):
         </div>
     </div>
 
-    <!-- TAB 3: Pareto Frontier -->
+    <!-- TAB 4: Pareto Frontier -->
     <div id="tab-pareto" class="tab-content">
         <div class="chart-grid full">
             <div class="card">
@@ -794,12 +784,12 @@ def generate_html(scorecard_data, dflash2_data):
         </div>
     </div>
 
-    <!-- TAB 4: Scorecard Table -->
+    <!-- TAB 5: Scorecard Table -->
     <div id="tab-scorecard" class="tab-content">
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Cumulative 45-Run Agentic Benchmark Scorecard</div>
-                <div class="card-desc">Filterable and searchable results table across all configurations and scenarios.</div>
+                <div class="card-title">Cumulative Benchmark Scorecard (All 55 Runs)</div>
+                <div class="card-desc">Filterable and searchable results table across all configurations, 200k drift tests, and agentic scenarios.</div>
             </div>
             <div class="table-responsive">
                 <table id="scorecard-table">
@@ -849,11 +839,11 @@ def generate_html(scorecard_data, dflash2_data):
             else if (row.quality < 90) scoreClass = 'tag-score-med';
 
             tr.innerHTML = `
-                <td><span style="font-weight:600; color:var(--text-secondary);">${{row.scenario.split(' ')[1] || row.scenario}}</span></td>
+                <td><span style="font-weight:600; color:var(--text-secondary);">${{row.scenario}}</span></td>
                 <td><strong>${{row.profile}}</strong></td>
                 <td><span class="tag ${{famClass}}">${{row.family}}</span></td>
                 <td>T=${{row.temp}} / Pen=${{row.penalty}} / B=${{row.budget}}</td>
-                <td><span class="${{scoreClass}}">${{row.quality}}/100</span></td>
+                <td><span class="${{scoreClass}}">${{row.quality}}%</span></td>
                 <td style="color:${{row.loss < 50 ? 'var(--accent-cyan)' : (row.loss < 100 ? 'var(--text-primary)' : 'var(--accent-rose)')}};"><strong>${{row.loss}}</strong></td>
                 <td>${{row.wallclock}}s</td>
                 <td>${{row.ttft}}s</td>
@@ -873,7 +863,111 @@ def generate_html(scorecard_data, dflash2_data):
             margin: {{ l: 50, r: 40, t: 40, b: 40 }},
         }};
 
-        // 1. Parallel Coordinates Plot
+        // --- TAB 1: 200K CONTEXT DRIFT PLOTS ---
+
+        // 1. 200k Throughput & TTFT Bar Chart
+        Plotly.newPlot('plot-200k-throughput', [
+            {{
+                name: 'Decode Speed (tok/s)',
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift15-MTP', 'Swift10-MTP', 'Base-NVFP4'],
+                y: [272.8, 255.2, 171.2, 168.4, 163.2],
+                marker: {{ color: '#00f0ff' }}
+            }},
+            {{
+                name: 'Prefill Speed (x100 tok/s)',
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift15-MTP', 'Swift10-MTP', 'Base-NVFP4'],
+                y: [38.2, 33.4, 32.1, 32.0, 33.4],
+                marker: {{ color: '#a855f7' }}
+            }}
+        ], {{
+            ...darkTheme,
+            barmode: 'group',
+            xaxis: {{ title: 'Model Architecture', gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Throughput (tok/s)', gridcolor: 'rgba(255,255,255,0.05)' }},
+            legend: {{ orientation: 'h', y: 1.1 }}
+        }}, {{ responsive: true }});
+
+        // 2. 20-Turn TTFT & Cumulative Context Line
+        const turnsX = Array.from({{ length: 20 }}, (_, i) => `Turn ${{i + 1}}`);
+        Plotly.newPlot('plot-20turn-scaling', [
+            {{
+                name: 'Swift15-DFlash2 TTFT (s)',
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: turnsX,
+                y: [0.91, 1.27, 1.49, 1.82, 2.03, 2.35, 2.67, 2.85, 3.11, 3.46, 3.60, 4.04, 4.49, 4.81, 5.27, 5.35, 5.75, 6.05, 6.19, 6.55],
+                line: {{ color: '#00f0ff', width: 3 }},
+                marker: {{ size: 7 }}
+            }},
+            {{
+                name: 'Swift15-MTP TTFT (s)',
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: turnsX,
+                y: [1.15, 1.57, 1.83, 2.16, 2.44, 2.70, 3.15, 3.30, 3.60, 4.07, 3.87, 4.44, 4.91, 5.14, 5.53, 5.56, 5.86, 5.95, 6.76, 7.08],
+                line: {{ color: '#a855f7', width: 2, dash: 'dot' }},
+                marker: {{ size: 6 }}
+            }}
+        ], {{
+            ...darkTheme,
+            xaxis: {{ title: 'Conversational Turn (Scaling to ~202,000 Tokens)', gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Turn TTFT (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }},
+            legend: {{ orientation: 'h', y: 1.1 }}
+        }}, {{ responsive: true }});
+
+        // 3. Instruction Decay & Leaks by Turn
+        Plotly.newPlot('plot-instruction-decay', [
+            {{
+                name: 'Swift 1.5 DFlash-2',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 1, 0, 0, 0, 0, 0],
+                marker: {{ color: '#00f0ff' }}
+            }},
+            {{
+                name: 'Swift 1.5 MTP',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 1, 0, 0, 1, 1, 0],
+                marker: {{ color: '#a855f7' }}
+            }},
+            {{
+                name: 'Swift 1.0 MTP',
+                type: 'bar',
+                x: ['Turns 1-14 (0-140k)', 'Turn 15 (152k)', 'Turn 16 (162k)', 'Turn 17 (172k)', 'Turn 18 (182k)', 'Turn 19 (192k)', 'Turn 20 (202k)'],
+                y: [0, 0, 0, 1, 1, 0, 0],
+                marker: {{ color: '#f59e0b' }}
+            }}
+        ], {{
+            ...darkTheme,
+            barmode: 'group',
+            xaxis: {{ title: 'Turn Horizon & Cumulative Context', gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Negative Constraint Violations', gridcolor: 'rgba(255,255,255,0.05)' }},
+            legend: {{ orientation: 'h', y: 1.1 }}
+        }}, {{ responsive: true }});
+
+        // 4. Total Session Time Bar Chart
+        Plotly.newPlot('plot-session-time', [
+            {{
+                type: 'bar',
+                x: ['Swift15-DFlash2', 'Base-DFlash2', 'Swift10-MTP', 'Base-NVFP4', 'Swift15-MTP'],
+                y: [208.3, 233.3, 256.0, 292.9, 346.1],
+                marker: {{
+                    color: ['#00f0ff', '#10b981', '#3b82f6', '#f59e0b', '#a855f7'],
+                    line: {{ color: '#ffffff', width: 1 }}
+                }},
+                text: ['208.3s (🏆 Fastest)', '233.3s', '256.0s', '292.9s', '346.1s'],
+                textposition: 'auto'
+            }}
+        ], {{
+            ...darkTheme,
+            xaxis: {{ title: 'Model Architecture', gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Total 20-Turn Session Time (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }}
+        }}, {{ responsive: true }});
+
+        // --- TAB 2: MULTIVARIATE SURFACE ---
         const families = [...new Set(scorecardData.map(d => d.family))];
         const parData = [{{
             type: 'parcoords',
@@ -887,33 +981,29 @@ def generate_html(scorecard_data, dflash2_data):
                 {{
                     label: 'Model Family',
                     values: scorecardData.map(d => families.indexOf(d.family)),
-                    tickvals: [0, 1, 2],
+                    tickvals: [0, 1, 2, 3, 4],
                     ticktext: families
                 }},
                 {{ label: 'Temperature', values: scorecardData.map(d => d.temp), range: [0.55, 0.95] }},
                 {{ label: 'Presence Penalty', values: scorecardData.map(d => d.penalty), range: [-0.01, 0.12] }},
                 {{ label: 'Thinking Budget', values: scorecardData.map(d => d.budget), range: [1000, 4500] }},
-                {{ label: 'Quality Score', values: scorecardData.map(d => d.quality), range: [40, 105] }},
-                {{ label: 'Wallclock (s)', values: scorecardData.map(d => d.wallclock), range: [0, 40] }},
-                {{ label: 'Optimization Loss', values: scorecardData.map(d => d.loss), range: [0, 240] }}
+                {{ label: 'Quality Score (%)', values: scorecardData.map(d => d.quality), range: [40, 105] }},
+                {{ label: 'Wallclock (s)', values: scorecardData.map(d => d.wallclock), range: [0, 350] }}
             ]
         }}];
         Plotly.newPlot('plot-parcoords', parData, {{ ...darkTheme, margin: {{ l: 80, r: 80, t: 40, b: 40 }} }}, {{ responsive: true }});
 
         // 2. Loss Heatmap
-        const temps = [0.60, 0.65, 0.70, 0.90];
-        const budgets = [1200, 1600, 2048, 4096];
-        const zGrid = [
-            [42.6, 55.0, 75.0, 96.4],
-            [36.7, 46.4, 60.0, 85.0],
-            [45.0, 62.0, 77.8, 98.5],
-            [70.0, 87.2, 110.0, 130.0]
-        ];
         Plotly.newPlot('plot-heatmap', [{{
             type: 'contour',
-            z: zGrid,
-            x: budgets,
-            y: temps,
+            z: [
+                [42.6, 55.0, 75.0, 96.4],
+                [36.7, 46.4, 60.0, 85.0],
+                [45.0, 62.0, 77.8, 98.5],
+                [70.0, 87.2, 110.0, 130.0]
+            ],
+            x: [1200, 1600, 2048, 4096],
+            y: [0.60, 0.65, 0.70, 0.90],
             colorscale: 'Viridis',
             reversescale: true,
             contours: {{ coloring: 'heatmap', showlabels: true }},
@@ -928,8 +1018,8 @@ def generate_html(scorecard_data, dflash2_data):
         Plotly.newPlot('plot-radar', [
             {{
                 type: 'scatterpolar',
-                r: [98, 100, 85, 96, 95, 95],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [98, 100, 95, 96, 95, 95],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Swift15-DFlash2',
                 line: {{ color: '#00f0ff', width: 2 }},
@@ -937,8 +1027,8 @@ def generate_html(scorecard_data, dflash2_data):
             }},
             {{
                 type: 'scatterpolar',
-                r: [95, 95, 80, 88, 90, 88],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [95, 95, 90, 88, 90, 88],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Base-DFlash2',
                 line: {{ color: '#10b981', width: 2 }},
@@ -946,53 +1036,33 @@ def generate_html(scorecard_data, dflash2_data):
             }},
             {{
                 type: 'scatterpolar',
-                r: [92, 85, 75, 70, 82, 80],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
-                fill: 'toself',
-                name: 'Swift15-MTP',
-                line: {{ color: '#f59e0b', width: 2 }},
-                fillcolor: 'rgba(245, 158, 11, 0.15)'
-            }},
-            {{
-                type: 'scatterpolar',
-                r: [90, 75, 70, 65, 80, 75],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
+                r: [92, 85, 80, 70, 82, 80],
+                theta: ['Bug Fix Quality', 'Trap Evasion', '200k Synthesis', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
                 fill: 'toself',
                 name: 'Swift10-MTP',
-                line: {{ color: '#a855f7', width: 2 }},
-                fillcolor: 'rgba(168, 85, 247, 0.15)'
-            }},
-            {{
-                type: 'scatterpolar',
-                r: [88, 70, 65, 62, 75, 70],
-                theta: ['Bug Fix Quality', 'Trap Evasion', 'Long Context Synth', 'Throughput Speed', 'TTFT / Cache', 'Loop Damping'],
-                fill: 'toself',
-                name: 'Base-NVFP4 (MTP)',
-                line: {{ color: '#ec4899', width: 2 }},
-                fillcolor: 'rgba(236, 72, 153, 0.15)'
+                line: {{ color: '#a855f7', width: 1.5 }},
+                fillcolor: 'rgba(168, 85, 247, 0.1)'
             }}
         ], {{
             ...darkTheme,
             polar: {{
-                radialaxis: {{ visible: true, range: [0, 100], color: '#64748b', gridcolor: 'rgba(255,255,255,0.08)' }},
-                angularaxis: {{ color: '#94a3b8', gridcolor: 'rgba(255,255,255,0.08)' }},
-                bgcolor: 'rgba(0,0,0,0)'
+                radialaxis: {{ visible: true, range: [0, 100], gridcolor: 'rgba(255,255,255,0.05)' }},
+                angularaxis: {{ gridcolor: 'rgba(255,255,255,0.05)' }}
             }},
-            showlegend: true,
-            legend: {{ orientation: 'h', y: -0.15 }}
+            legend: {{ orientation: 'h', y: 1.15 }}
         }}, {{ responsive: true }});
 
-        // 4. DFlash-2 Position Decay
-        const posRates = dflash2Data.position_rates || [];
+        // --- TAB 3: DFLASH-2 TELEMETRY ---
+        const dDecay = dflash2Data.position_decay || [];
         Plotly.newPlot('plot-dflash-decay', [{{
             type: 'bar',
-            x: posRates.map(p => p.position),
-            y: posRates.map(p => p.rate),
+            x: dDecay.map(d => `Draft Pos ${{d.position}}`),
+            y: dDecay.map(d => d.rate),
             marker: {{
-                color: posRates.map((p, i) => `rgba(0, 240, 255, ${{1 - i * 0.12}})`),
-                line: {{ color: '#00f0ff', width: 1.5 }}
+                color: dDecay.map(d => `rgba(0, 240, 255, ${{d.rate / 100}})`),
+                line: {{ color: '#00f0ff', width: 1 }}
             }},
-            text: posRates.map(p => `${{p.rate}}%`),
+            text: dDecay.map(d => `${{d.rate}}%`),
             textposition: 'auto'
         }}], {{
             ...darkTheme,
@@ -1000,57 +1070,36 @@ def generate_html(scorecard_data, dflash2_data):
             yaxis: {{ title: 'Acceptance Rate (%)', range: [0, 100], gridcolor: 'rgba(255,255,255,0.05)' }}
         }}, {{ responsive: true }});
 
-        // 5. DFlash-2 Context Scaling
-        const bSummary = dflash2Data.bucket_summary || [];
-        Plotly.newPlot('plot-dflash-context', [
-            {{
-                type: 'bar',
-                name: 'Acceptance Rate (%)',
-                x: bSummary.map(b => b.bucket),
-                y: bSummary.map(b => b.rate),
-                marker: {{ color: '#10b981' }},
-                yaxis: 'y'
-            }},
-            {{
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'Decode Speed (tok/s)',
-                x: bSummary.map(b => b.bucket),
-                y: bSummary.map(b => b.avg_speed),
-                marker: {{ color: '#00f0ff', size: 8 }},
-                line: {{ color: '#00f0ff', width: 2 }},
-                yaxis: 'y2'
-            }}
-        ], {{
+        const dContext = dflash2Data.context_curve || [];
+        Plotly.newPlot('plot-dflash-context', [{{
+            type: 'scatter',
+            mode: 'lines+markers',
+            x: dContext.map(d => d.bucket),
+            y: dContext.map(d => d.rate),
+            line: {{ color: '#10b981', width: 3 }},
+            marker: {{ size: 8, color: '#00f0ff' }}
+        }}], {{
             ...darkTheme,
-            xaxis: {{ title: 'Prompt Context Length', gridcolor: 'rgba(255,255,255,0.05)' }},
-            yaxis: {{ title: 'Acceptance (%)', range: [0, 80], gridcolor: 'rgba(255,255,255,0.05)' }},
-            yaxis2: {{ title: 'Decode Speed (tok/s)', overlaying: 'y', side: 'right', range: [100, 380], font: {{ color: '#00f0ff' }} }},
-            legend: {{ orientation: 'h', y: 1.15 }}
+            xaxis: {{ title: 'Context Window Bucket (Tokens)', gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Speculative Acceptance (%)', range: [40, 80], gridcolor: 'rgba(255,255,255,0.05)' }}
         }}, {{ responsive: true }});
 
-        // 6. TTFT Scaling
         const ttftPts = dflash2Data.ttft_points || [];
         Plotly.newPlot('plot-ttft-scaling', [{{
             type: 'scatter',
             mode: 'markers',
-            x: ttftPts.map(p => p.prompt),
-            y: ttftPts.map(p => p.ttft),
-            marker: {{
-                color: '#3b82f6',
-                size: 6,
-                opacity: 0.6
-            }}
+            x: ttftPts.map(d => d.prompt),
+            y: ttftPts.map(d => d.ttft),
+            marker: {{ color: '#a855f7', size: 6, opacity: 0.7 }}
         }}], {{
             ...darkTheme,
             xaxis: {{ title: 'Prompt Tokens', gridcolor: 'rgba(255,255,255,0.05)' }},
-            yaxis: {{ title: 'TTFT (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }}
+            yaxis: {{ title: 'Time to First Token (TTFT, s)', gridcolor: 'rgba(255,255,255,0.05)' }}
         }}, {{ responsive: true }});
 
-        // 7. Speed Histogram
         Plotly.newPlot('plot-speed-hist', [{{
             type: 'histogram',
-            x: [210, 240, 260, 275, 290, 310, 325, 335, 345, 350, 355, 360, 365, 370],
+            x: dflash2Data.decode_speeds && dflash2Data.decode_speeds.length > 0 ? dflash2Data.decode_speeds : [210, 240, 260, 275, 290, 310, 325, 335, 345, 350, 355, 360, 365, 370],
             marker: {{ color: 'rgba(0, 240, 255, 0.7)', line: {{ color: '#00f0ff', width: 1 }} }}
         }}], {{
             ...darkTheme,
@@ -1058,7 +1107,7 @@ def generate_html(scorecard_data, dflash2_data):
             yaxis: {{ title: 'Frequency', gridcolor: 'rgba(255,255,255,0.05)' }}
         }}, {{ responsive: true }});
 
-        // 8. Pareto Frontier Plot
+        // --- TAB 4: PARETO FRONTIER ---
         const sc1 = scorecardData.filter(d => d.scenario.includes('1'));
         const sc2 = scorecardData.filter(d => d.scenario.includes('2'));
         const sc3 = scorecardData.filter(d => d.scenario.includes('3'));
@@ -1095,7 +1144,7 @@ def generate_html(scorecard_data, dflash2_data):
             {{
                 type: 'scatter',
                 mode: 'markers',
-                name: 'Scenario 3 (Long-Horizon)',
+                name: 'Scenario 3 (15-Turn Synth)',
                 x: sc3.map(d => d.wallclock),
                 y: sc3.map(d => d.quality),
                 text: sc3.map(d => `${{d.config}}<br>Loss: ${{d.loss}}<br>Thinking: ${{d.thinking}} tok`),
@@ -1109,7 +1158,7 @@ def generate_html(scorecard_data, dflash2_data):
         ], {{
             ...darkTheme,
             xaxis: {{ title: 'Wallclock Duration (seconds)', gridcolor: 'rgba(255,255,255,0.05)' }},
-            yaxis: {{ title: 'Quality Score (0 - 100)', range: [40, 105], gridcolor: 'rgba(255,255,255,0.05)' }},
+            yaxis: {{ title: 'Quality Score (%)', range: [40, 105], gridcolor: 'rgba(255,255,255,0.05)' }},
             showlegend: true,
             legend: {{ orientation: 'h', y: 1.1 }}
         }}, {{ responsive: true }});
